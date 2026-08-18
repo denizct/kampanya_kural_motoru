@@ -1,39 +1,39 @@
 <!DOCTYPE html>
-<html lang="tr" class="dark">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kampanya Kural Motoru | Campaign Rule Engine</title>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SortableJS CDN for Drag & Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        slate: {
-                            850: '#111827',
-                            900: '#0f172a',
-                            950: '#020617',
-                        }
-                    },
                     fontFamily: {
                         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
                         mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'card': '0 4px 20px -2px rgba(99, 102, 241, 0.08)',
+                        'glow': '0 0 20px -3px rgba(99, 102, 241, 0.25)',
                     }
                 }
             }
         }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #020617;
-            color: #f8fafc;
+            background-color: #f8fafc;
+            color: #1e293b;
         }
         .code-font {
             font-family: 'JetBrains Mono', monospace;
@@ -44,44 +44,63 @@
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: #f1f5f9;
         }
         ::-webkit-scrollbar-thumb {
-            background: #334155;
+            background: #cbd5e1;
             border-radius: 3px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: #94a3b8;
+        }
+        /* Sortable styles */
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #e0e7ff !important;
+            border: 2px dashed #6366f1 !important;
+        }
+        .sortable-chosen {
+            background-color: #eef2ff !important;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.2) !important;
+        }
+        .drag-handle {
+            cursor: grab;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-slate-700 selection:text-white">
+<body class="bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-100 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
-    <!-- Top Navigation -->
-    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
+    <!-- Top Navigation Header -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-sm shadow-inner">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-200">
                     ⚡
                 </div>
                 <div>
-                    <h1 class="text-base font-semibold text-slate-100 tracking-tight leading-tight">Kampanya Kural Motoru</h1>
-                    <p class="text-xs text-slate-400">E-Ticaret İndirim & Kural Değerlendirme Servisi</p>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-base font-bold text-slate-900 tracking-tight leading-tight">Kampanya Kural Motoru</h1>
+                        <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">v1.0</span>
+                    </div>
+                    <p class="text-xs text-slate-500">E-Ticaret Akıllı İndirim & Promosyon Değerlendirme Servisi</p>
                 </div>
             </div>
 
-            <!-- Global Status & Info -->
+            <!-- Global Status Badges & Quick Links -->
             <div class="flex items-center space-x-3">
-                <div class="flex items-center space-x-2 bg-slate-800/80 border border-slate-700/80 px-3 py-1.5 rounded-md text-xs">
+                <div class="hidden sm:flex items-center space-x-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 shadow-xs">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-slate-300 font-medium">Hit Policy: First</span>
+                    <span>🎯 Hit Policy: First</span>
                 </div>
-                <div class="flex items-center space-x-2 bg-slate-800/80 border border-slate-700/80 px-3 py-1.5 rounded-md text-xs text-slate-300">
+                <div class="hidden md:flex items-center space-x-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg text-xs text-slate-700 font-medium">
                     <span class="text-slate-400">Veritabanı:</span>
-                    <span class="font-mono text-emerald-400">PostgreSQL / Online</span>
+                    <span class="font-mono font-bold text-indigo-600">Online 🟢</span>
                 </div>
-                <a href="/docs" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium rounded-md transition-colors">
-                    Swagger API
+                <a href="/docs" target="_blank" class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold rounded-lg shadow-xs transition-all flex items-center space-x-1">
+                    <span>🚀 Swagger API</span>
                 </a>
             </div>
         </div>
@@ -90,99 +109,128 @@
     <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- Metrics Overview Bar -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+        <!-- 1. METRICS OVERVIEW BAR (CANLI RENKLİ STATS) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- Aktif Kurallar -->
+            <div class="bg-white border border-emerald-100 rounded-2xl p-4 sm:p-5 shadow-sm shadow-emerald-100/50 hover:shadow-md hover:border-emerald-200 transition-all flex items-center justify-between group">
                 <div>
-                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Aktif Kurallar</span>
-                    <h3 id="stat-active-rules" class="text-2xl font-bold text-slate-100 mt-1 font-mono">0</h3>
+                    <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider block">Aktif Kurallar</span>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <h3 id="stat-active-rules" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">0</h3>
+                        <span class="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Çalışıyor</span>
+                    </div>
                 </div>
-                <div class="w-10 h-10 rounded-lg bg-emerald-950/50 border border-emerald-800/60 flex items-center justify-center text-emerald-400 text-lg">
-                    ✓
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 text-xl font-bold group-hover:scale-110 transition-transform shadow-xs">
+                    ⚡
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+            <!-- Toplam Kurallar -->
+            <div class="bg-white border border-indigo-100 rounded-2xl p-4 sm:p-5 shadow-sm shadow-indigo-100/50 hover:shadow-md hover:border-indigo-200 transition-all flex items-center justify-between group">
                 <div>
-                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Toplam Kural</span>
-                    <h3 id="stat-total-rules" class="text-2xl font-bold text-slate-100 mt-1 font-mono">0</h3>
+                    <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider block">Toplam Kurallar</span>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <h3 id="stat-total-rules" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">0</h3>
+                        <span class="text-[11px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Tanımlı</span>
+                    </div>
                 </div>
-                <div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-lg">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 text-xl font-bold group-hover:scale-110 transition-transform shadow-xs">
                     📋
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+            <!-- Stoklu Hediyeler -->
+            <div class="bg-white border border-amber-100 rounded-2xl p-4 sm:p-5 shadow-sm shadow-amber-100/50 hover:shadow-md hover:border-amber-200 transition-all flex items-center justify-between group">
                 <div>
-                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Stoklu Hediyeler</span>
-                    <h3 id="stat-active-gifts" class="text-2xl font-bold text-slate-100 mt-1 font-mono">0</h3>
+                    <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider block">Stoklu Hediyeler</span>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <h3 id="stat-active-gifts" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">0</h3>
+                        <span class="text-[11px] font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Envanter</span>
+                    </div>
                 </div>
-                <div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-lg">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 text-xl font-bold group-hover:scale-110 transition-transform shadow-xs">
                     🎁
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+            <!-- Geçerli Kuponlar -->
+            <div class="bg-white border border-pink-100 rounded-2xl p-4 sm:p-5 shadow-sm shadow-pink-100/50 hover:shadow-md hover:border-pink-200 transition-all flex items-center justify-between group">
                 <div>
-                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Geçerli Kuponlar</span>
-                    <h3 id="stat-active-coupons" class="text-2xl font-bold text-slate-100 mt-1 font-mono">0</h3>
+                    <span class="text-xs font-semibold text-pink-600 uppercase tracking-wider block">Geçerli Kuponlar</span>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <h3 id="stat-active-coupons" class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">0</h3>
+                        <span class="text-[11px] font-medium text-pink-600 bg-pink-50 px-2 py-0.5 rounded-full">Aktif Şablon</span>
+                    </div>
                 </div>
-                <div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-lg">
+                <div class="w-12 h-12 rounded-xl bg-pink-50 border border-pink-200 flex items-center justify-center text-pink-600 text-xl font-bold group-hover:scale-110 transition-transform shadow-xs">
                     🎟️
                 </div>
             </div>
+
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="border-b border-slate-800 flex space-x-6 text-sm font-medium">
-            <button id="tab-btn-rules" onclick="switchTab('rules')" class="pb-3 border-b-2 border-slate-100 text-slate-100 flex items-center space-x-2 transition-all">
-                <span>Kampanya Kuralları & Öncelik Sıralaması</span>
-                <span id="tab-badge-rules" class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-xs font-mono">0</span>
+        <!-- 2. NAVIGATION TABS -->
+        <div class="bg-white border border-slate-200 rounded-xl p-1.5 shadow-xs flex flex-wrap gap-1 text-sm font-semibold">
+            <button id="tab-btn-rules" onclick="switchTab('rules')" class="px-4 py-2.5 rounded-lg bg-indigo-600 text-white shadow-sm flex items-center space-x-2 transition-all">
+                <span>🎯 Kampanya Kuralları & Öncelik Sıralaması</span>
+                <span id="tab-badge-rules" class="bg-indigo-700/80 text-white px-2 py-0.5 rounded-full text-xs font-mono font-bold">0</span>
             </button>
-            <button id="tab-btn-simulator" onclick="switchTab('simulator')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition-all">
-                <span>⚡ Canlı Sepet Simülatörü</span>
-                <span class="bg-emerald-950/60 border border-emerald-800 text-emerald-400 px-2 py-0.5 rounded-full text-xs font-mono">Live API</span>
+            <button id="tab-btn-simulator" onclick="switchTab('simulator')" class="px-4 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-2 transition-all">
+                <span>🛒 Canlı Sepet Simülatörü</span>
+                <span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-mono font-bold border border-emerald-200">Live Test</span>
             </button>
-            <button id="tab-btn-references" onclick="switchTab('references')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition-all">
-                <span>Hediye & Kupon Envanteri</span>
+            <button id="tab-btn-references" onclick="switchTab('references')" class="px-4 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-2 transition-all">
+                <span>📦 Hediye & Kupon Envanteri</span>
             </button>
         </div>
 
-        <!-- TAB 1: RULES MANAGEMENT -->
+        <!-- ============================================================= -->
+        <!-- TAB 1: RULES MANAGEMENT (DRAG & DROP SÜRÜKLE-BIRAK DESTEKLİ) -->
+        <!-- ============================================================= -->
         <section id="view-rules" class="space-y-4">
-            <div class="flex items-center justify-between">
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-lg font-semibold text-slate-100">Kural Öncelik Sıralaması</h2>
-                    <p class="text-xs text-slate-400">Kurallar yukarıdan aşağıya (Öncelik 1'den başlayarak) değerlendirilir. İlk uyan kural işletilir.</p>
+                    <h2 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+                        <span>🎯 Öncelikli Kural Değerlendirme Listesi</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        <span class="font-semibold text-indigo-600">Hit Policy: First</span> — Kurallar 1'den başlayarak taranır. Sıralamayı değiştirmek için satır başındaki <strong class="text-slate-700">tutamacı (⋮⋮)</strong> sürükleyip bırakabilirsiniz.
+                    </p>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <button onclick="refreshData()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium rounded-md transition-colors flex items-center space-x-1.5">
+                <div class="flex items-center space-x-2.5 shrink-0">
+                    <button onclick="refreshData()" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl shadow-xs transition-all flex items-center space-x-1.5">
                         <span>↻ Yenile</span>
                     </button>
-                    <button onclick="openCreateRuleModal()" class="px-4 py-2 bg-slate-100 hover:bg-white text-slate-900 font-semibold text-xs rounded-md shadow transition-colors flex items-center space-x-1.5">
-                        <span>+ Yeni Kural Tanımla</span>
+                    <button onclick="openCreateRuleModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-md shadow-emerald-200 transition-all flex items-center space-x-1.5">
+                        <span>+ Yeni Kural Ekle</span>
                     </button>
                 </div>
             </div>
 
             <!-- Rules Table / Card List -->
-            <div class="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow-sm">
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-850 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
+                        <thead class="bg-slate-50 text-slate-600 border-b border-slate-200 uppercase tracking-wider font-bold">
                             <tr>
-                                <th class="py-3.5 px-4 w-20 text-center">Öncelik</th>
-                                <th class="py-3.5 px-4">Kural Adı / Kampanya</th>
-                                <th class="py-3.5 px-4">Koşullar (Tümü Sağlanmalı)</th>
-                                <th class="py-3.5 px-4">Aksiyon / Fayda</th>
+                                <th class="py-3.5 px-3 w-12 text-center">Taşı</th>
+                                <th class="py-3.5 px-3 w-16 text-center">Sıra</th>
+                                <th class="py-3.5 px-4 min-w-[200px]">Kural Adı & Kampanya</th>
+                                <th class="py-3.5 px-4 min-w-[280px]">Koşullar (Tümü Sağlanmalı)</th>
+                                <th class="py-3.5 px-4 min-w-[160px]">Aksiyon / Kazanım</th>
                                 <th class="py-3.5 px-4 text-center w-28">Durum</th>
-                                <th class="py-3.5 px-4 text-right w-36">İşlemler</th>
+                                <th class="py-3.5 px-4 text-right w-28">İşlemler</th>
                             </tr>
                         </thead>
-                        <tbody id="rules-table-body" class="divide-y divide-slate-800/80 text-slate-300">
-                            <!-- Populated dynamically by app.js -->
+                        <tbody id="rules-table-body" class="divide-y divide-slate-100 text-slate-700 font-medium">
                             <tr>
-                                <td colspan="6" class="text-center py-8 text-slate-500">Kurallar yükleniyor...</td>
+                                <td colspan="7" class="text-center py-12 text-slate-400">
+                                    <div class="flex flex-col items-center justify-center space-y-2">
+                                        <span class="text-2xl animate-spin">⏳</span>
+                                        <span>Kurallar yükleniyor...</span>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -190,32 +238,36 @@
             </div>
         </section>
 
-        <!-- TAB 2: CART SIMULATOR -->
+        <!-- ============================================================= -->
+        <!-- TAB 2: CART SIMULATOR (CANLI SEPET SİMÜLATÖRÜ)                 -->
+        <!-- ============================================================= -->
         <section id="view-simulator" class="hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 <!-- Left Column: Input Form -->
-                <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-5">
-                    <div class="border-b border-slate-800 pb-3">
-                        <h2 class="text-sm font-semibold text-slate-100">Sepet Bağlam Parametreleri</h2>
-                        <p class="text-xs text-slate-400">POST /api/v1/kampanya/degerlendir endpoint'ine gönderilecek yük.</p>
+                <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
+                    <div class="border-b border-slate-100 pb-3">
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                            <span>🛒 Sepet Bağlam Parametreleri</span>
+                        </h2>
+                        <p class="text-xs text-slate-500">Değerlendirilecek sipariş ve sepet verilerini girin.</p>
                     </div>
 
                     <!-- Preset Quick Buttons -->
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-2">Örnek Senaryo Yükle:</label>
+                        <label class="block text-xs font-semibold text-slate-600 mb-2">⚡ Hızlı Test Senaryoları:</label>
                         <div class="grid grid-cols-2 gap-2 text-xs">
-                            <button onclick="loadScenario('weekend_discount')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 rounded text-left truncate">
+                            <button type="button" onclick="loadScenario('weekend_discount')" class="px-3 py-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-700 rounded-xl text-left font-medium transition-all shadow-xs truncate">
                                 🛍️ Hafta Sonu (600 TL)
                             </button>
-                            <button onclick="loadScenario('vip_order')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 rounded text-left truncate">
+                            <button type="button" onclick="loadScenario('vip_order')" class="px-3 py-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-700 rounded-xl text-left font-medium transition-all shadow-xs truncate">
                                 👑 VIP Sipariş (1200 TL)
                             </button>
-                            <button onclick="loadScenario('night_order')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 rounded text-left truncate">
+                            <button type="button" onclick="loadScenario('night_order')" class="px-3 py-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-700 rounded-xl text-left font-medium transition-all shadow-xs truncate">
                                 🌙 Gece 23:30 (Kargo Bedava)
                             </button>
-                            <button onclick="loadScenario('gift_cart')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 rounded text-left truncate">
-                                🎁 Kredi Kartı 800 TL (Termos)
+                            <button type="button" onclick="loadScenario('gift_cart')" class="px-3 py-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-700 rounded-xl text-left font-medium transition-all shadow-xs truncate">
+                                🎁 800 TL Kredi Kartı (Termos)
                             </button>
                         </div>
                     </div>
@@ -223,25 +275,25 @@
                     <!-- Input Fields -->
                     <form id="simulator-form" onsubmit="event.preventDefault(); runSimulation();" class="space-y-4 text-xs">
                         <div>
-                            <label class="block font-medium text-slate-300 mb-1">Sepet Tutarı (TL) <span class="text-red-400">*</span></label>
+                            <label class="block font-semibold text-slate-700 mb-1">Sepet Tutarı (TL) <span class="text-rose-500">*</span></label>
                             <div class="relative">
-                                <input type="number" step="0.01" min="0" id="sim_sepet_tutari" required value="600.00" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-slate-500">
-                                <span class="absolute right-3 top-2 text-slate-500 font-mono">₺</span>
+                                <input type="number" step="0.01" min="0" id="sim_sepet_tutari" required value="600.00" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
+                                <span class="absolute right-3.5 top-2.5 text-slate-400 font-mono font-bold text-sm">₺</span>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block font-medium text-slate-300 mb-1">Kullanıcı Segmenti <span class="text-red-400">*</span></label>
-                                <select id="sim_kullanici_tipi" required class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                <label class="block font-semibold text-slate-700 mb-1">Kullanıcı Segmenti <span class="text-rose-500">*</span></label>
+                                <select id="sim_kullanici_tipi" required class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                                     <option value="STANDART">STANDART</option>
                                     <option value="VIP">VIP</option>
                                     <option value="YENI">YENI</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-medium text-slate-300 mb-1">Ödeme Yöntemi <span class="text-red-400">*</span></label>
-                                <select id="sim_odeme_yontemi" required class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                <label class="block font-semibold text-slate-700 mb-1">Ödeme Yöntemi <span class="text-rose-500">*</span></label>
+                                <select id="sim_odeme_yontemi" required class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                                     <option value="KREDI_KARTI">KREDI_KARTI</option>
                                     <option value="HAVALE">HAVALE</option>
                                     <option value="KAPIDA_ODEME">KAPIDA_ODEME</option>
@@ -251,8 +303,8 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block font-medium text-slate-300 mb-1">Haftanın Günü <span class="text-red-400">*</span></label>
-                                <select id="sim_haftanin_gunu" required class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                <label class="block font-semibold text-slate-700 mb-1">Haftanın Günü <span class="text-rose-500">*</span></label>
+                                <select id="sim_haftanin_gunu" required class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                                     <option value="PAZARTESI">PAZARTESI</option>
                                     <option value="SALI">SALI</option>
                                     <option value="CARSAMBA">CARSAMBA</option>
@@ -263,12 +315,12 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-medium text-slate-300 mb-1">İşlem Saati <span class="text-red-400">*</span></label>
-                                <input type="time" id="sim_islem_saati" required value="14:30" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                <label class="block font-semibold text-slate-700 mb-1">İşlem Saati <span class="text-rose-500">*</span></label>
+                                <input type="time" id="sim_islem_saati" required value="14:30" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-mono">
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full py-2.5 bg-slate-100 hover:bg-white text-slate-900 font-semibold rounded shadow transition-colors flex items-center justify-center space-x-2">
+                        <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition-all flex items-center justify-center space-x-2 transform active:scale-[0.99]">
                             <span>⚡ Sepeti Değerlendir (Evaluate)</span>
                         </button>
                     </form>
@@ -278,121 +330,124 @@
                 <div class="lg:col-span-7 space-y-4">
                     
                     <!-- Result Summary Card -->
-                    <div id="sim-result-card" class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4">
-                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div id="sim-result-card" class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                             <div class="flex items-center space-x-2">
-                                <span id="sim-status-badge" class="px-2.5 py-0.5 rounded text-xs font-mono font-medium bg-slate-800 text-slate-300">
+                                <span id="sim-status-badge" class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-600 border border-slate-200">
                                     Durum: Bekleniyor
                                 </span>
-                                <span id="sim-hit-badge" class="hidden px-2.5 py-0.5 rounded text-xs font-mono font-medium bg-emerald-950 border border-emerald-800 text-emerald-400">
-                                    Kural Eşleşti
+                                <span id="sim-hit-badge" class="hidden px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    🎯 Kural Eşleşti
                                 </span>
                             </div>
-                            <span id="sim-exec-time" class="text-xs font-mono text-slate-400">0 ms</span>
+                            <span id="sim-exec-time" class="text-xs font-mono text-slate-400 font-semibold">0 ms</span>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-4 text-center">
-                            <div class="bg-slate-950/60 border border-slate-800/80 p-3 rounded-lg">
-                                <span class="text-xs text-slate-400 block mb-1">Orijinal Sepet</span>
-                                <span id="res-orig-price" class="text-lg font-bold font-mono text-slate-200">₺0.00</span>
+                        <div class="grid grid-cols-3 gap-3 sm:gap-4 text-center">
+                            <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
+                                <span class="text-xs font-semibold text-slate-500 block mb-1">Orijinal Sepet</span>
+                                <span id="res-orig-price" class="text-base sm:text-xl font-bold font-mono text-slate-800">₺0.00</span>
                             </div>
-                            <div class="bg-slate-950/60 border border-slate-800/80 p-3 rounded-lg">
-                                <span class="text-xs text-slate-400 block mb-1">İndirim Tutarı</span>
-                                <span id="res-discount" class="text-lg font-bold font-mono text-emerald-400">₺0.00</span>
+                            <div class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl">
+                                <span class="text-xs font-semibold text-emerald-700 block mb-1">İndirim Tutarı</span>
+                                <span id="res-discount" class="text-base sm:text-xl font-bold font-mono text-emerald-600">-₺0.00</span>
                             </div>
-                            <div class="bg-slate-950/60 border border-slate-800/80 p-3 rounded-lg">
-                                <span class="text-xs text-slate-400 block mb-1">Ödenecek Net Tutar</span>
-                                <span id="res-final-price" class="text-lg font-bold font-mono text-slate-100">₺0.00</span>
+                            <div class="bg-indigo-50 border border-indigo-200 p-3.5 rounded-xl">
+                                <span class="text-xs font-semibold text-indigo-700 block mb-1">Ödenecek Net</span>
+                                <span id="res-final-price" class="text-base sm:text-xl font-bold font-mono text-indigo-700">₺0.00</span>
                             </div>
                         </div>
 
                         <!-- Rule & Benefit Highlights -->
-                        <div id="sim-benefit-box" class="hidden bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-1.5 text-xs">
+                        <div id="sim-benefit-box" class="hidden bg-gradient-to-r from-indigo-50/70 to-purple-50/70 border border-indigo-100 rounded-xl p-4 space-y-2 text-xs">
                             <div class="flex items-center justify-between">
-                                <span class="text-slate-400">Uygulanan Kural:</span>
-                                <span id="res-rule-name" class="font-semibold text-slate-200">-</span>
+                                <span class="text-slate-600 font-medium">Uygulanan Kural:</span>
+                                <span id="res-rule-name" class="font-bold text-indigo-900">-</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-slate-400">Aksiyon Tipi:</span>
-                                <span id="res-action-type" class="font-mono text-slate-300">-</span>
+                                <span class="text-slate-600 font-medium">Aksiyon Türü:</span>
+                                <span id="res-action-type" class="font-mono font-bold text-indigo-700">-</span>
                             </div>
-                            <div id="res-extra-benefit-row" class="hidden flex items-center justify-between text-emerald-400 border-t border-slate-800/80 pt-1.5">
-                                <span class="font-medium">Ek Fayda:</span>
-                                <span id="res-extra-benefit-val" class="font-semibold">-</span>
+                            <div id="res-extra-benefit-row" class="hidden flex items-center justify-between text-emerald-700 border-t border-indigo-100/80 pt-2">
+                                <span class="font-bold">🎁 Ek Kazanım / Fayda:</span>
+                                <span id="res-extra-benefit-val" class="font-bold">-</span>
                             </div>
                         </div>
 
                         <!-- Message alert -->
-                        <div id="sim-message-box" class="text-xs text-slate-400 bg-slate-950/40 p-2.5 rounded border border-slate-800">
+                        <div id="sim-message-box" class="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200">
                             Değerlendirme sonucunu görmek için 'Sepeti Değerlendir' butonuna basın.
                         </div>
                     </div>
 
                     <!-- Raw JSON Viewer -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-mono text-slate-400 uppercase">REST API JSON Yanıtı</span>
-                            <button onclick="copyJsonResponse()" class="text-xs text-slate-400 hover:text-slate-200 transition-colors">
-                                📋 Kopyala
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">REST API JSON Yanıtı</span>
+                            <button type="button" onclick="copyJsonResponse()" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center space-x-1">
+                                <span>📋 JSON Kopyala</span>
                             </button>
                         </div>
-                        <pre id="json-viewer" class="code-font text-xs text-slate-300 bg-slate-950 border border-slate-800/80 p-3 rounded-lg overflow-x-auto max-h-48">{ "status": "idle" }</pre>
+                        <pre id="json-viewer" class="code-font text-xs text-emerald-600 bg-slate-900 rounded-xl p-4 overflow-x-auto max-h-44 shadow-inner">{ "status": "idle" }</pre>
                     </div>
                 </div>
 
             </div>
         </section>
 
-        <!-- TAB 3: REFERENCES & STOCK -->
+        <!-- ============================================================= -->
+        <!-- TAB 3: REFERENCES & STOCK (HEDİYE & KUPON ENVANTERİ)          -->
+        <!-- ============================================================= -->
         <section id="view-references" class="hidden space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
                 <!-- Gift Products Card -->
-                <div class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div>
-                            <h3 class="text-sm font-semibold text-slate-100">Hediye Ürün Envanteri</h3>
-                            <p class="text-xs text-slate-400">Kampanya aksiyonlarında seçilebilen aktif/stoklu ürünler.</p>
+                            <h3 class="text-sm font-bold text-slate-900">🎁 Hediye Ürün Envanteri</h3>
+                            <p class="text-xs text-slate-500">Kampanya aksiyonlarında hediye verilebilen ürünler.</p>
                         </div>
-                        <span class="text-lg">🎁</span>
+                        <span class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 text-lg">🎁</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
-                            <thead class="text-slate-400 border-b border-slate-800">
+                            <thead class="text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider">
                                 <tr>
-                                    <th class="pb-2">Stok Kodu</th>
-                                    <th class="pb-2">Ürün Adı</th>
-                                    <th class="pb-2 text-center">Stok</th>
-                                    <th class="pb-2 text-right">Durum</th>
+                                    <th class="pb-2.5">Stok Kodu</th>
+                                    <th class="pb-2.5">Ürün Adı</th>
+                                    <th class="pb-2.5 text-center">Mevcut Stok</th>
+                                    <th class="pb-2.5 text-right">Durum</th>
                                 </tr>
                             </thead>
-                            <tbody id="gifts-table-body" class="divide-y divide-slate-800 text-slate-300">
-                                <!-- Populated dynamically -->
+                            <tbody id="gifts-table-body" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                                <tr><td colspan="4" class="py-6 text-center text-slate-400">Yükleniyor...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
                 <!-- Coupon Templates Card -->
-                <div class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div>
-                            <h3 class="text-sm font-semibold text-slate-100">Kupon Şablonları</h3>
-                            <p class="text-xs text-slate-400">Kampanya aksiyonlarında tanımlanabilen indirim kuponları.</p>
+                            <h3 class="text-sm font-bold text-slate-900">🎟️ Kupon Şablonları</h3>
+                            <p class="text-xs text-slate-500">Tanımlanabilen indirim kuponu şablonları ve limitler.</p>
                         </div>
-                        <span class="text-lg">🎟️</span>
+                        <span class="w-9 h-9 rounded-xl bg-pink-50 border border-pink-200 flex items-center justify-center text-pink-600 text-lg">🎟️</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
-                            <thead class="text-slate-400 border-b border-slate-800">
+                            <thead class="text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider">
                                 <tr>
-                                    <th class="pb-2">Kupon Kodu</th>
-                                    <th class="pb-2">İndirim</th>
-                                    <th class="pb-2 text-center">Kalan Limit</th>
-                                    <th class="pb-2 text-right">Durum</th>
+                                    <th class="pb-2.5">Kupon Kodu</th>
+                                    <th class="pb-2.5">İndirim</th>
+                                    <th class="pb-2.5 text-center">Kalan Limit</th>
+                                    <th class="pb-2.5 text-right">Durum</th>
                                 </tr>
                             </thead>
-                            <tbody id="coupons-table-body" class="divide-y divide-slate-800 text-slate-300">
-                                <!-- Populated dynamically -->
+                            <tbody id="coupons-table-body" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                                <tr><td colspan="4" class="py-6 text-center text-slate-400">Yükleniyor...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -402,17 +457,22 @@
 
     </main>
 
-    <!-- CREATE / EDIT RULE MODAL -->
-    <div id="rule-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- ============================================================= -->
+    <!-- CREATE / EDIT RULE MODAL (MODERN LIGHT MODAL)                 -->
+    <!-- ============================================================= -->
+    <div id="rule-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
             
             <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-850">
-                <div>
-                    <h3 id="modal-title" class="text-sm font-semibold text-slate-100">Yeni Kampanya Kuralı Tanımla</h3>
-                    <p class="text-xs text-slate-400">Kural varsayılan olarak Pasif durumda kaydedilir.</p>
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+                <div class="flex items-center space-x-2.5">
+                    <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">✨</span>
+                    <div>
+                        <h3 id="modal-title" class="text-sm font-bold text-slate-900">Yeni Kampanya Kuralı Tanımla</h3>
+                        <p class="text-xs text-slate-500">Kural varsayılan olarak Pasif durumda kaydedilir.</p>
+                    </div>
                 </div>
-                <button onclick="closeRuleModal()" class="text-slate-400 hover:text-slate-100 text-lg">&times;</button>
+                <button type="button" onclick="closeRuleModal()" class="w-8 h-8 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center text-lg font-bold transition-colors">&times;</button>
             </div>
 
             <!-- Modal Form Body -->
@@ -422,12 +482,12 @@
                 <!-- Rule Name & Campaign -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">Kural Adı <span class="text-red-400">*</span></label>
-                        <input type="text" id="form-rule-name" required placeholder="Örn: Hafta Sonu %10 İndirim" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                        <label class="block font-semibold text-slate-700 mb-1">Kural Adı <span class="text-rose-500">*</span></label>
+                        <input type="text" id="form-rule-name" required placeholder="Örn: Hafta Sonu %10 İndirim" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">Kampanya Grubu (Opsiyonel)</label>
-                        <select id="form-campaign-id" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                        <label class="block font-semibold text-slate-700 mb-1">Kampanya Grubu (Opsiyonel)</label>
+                        <select id="form-campaign-id" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                             <option value="">-- Kampanyasız / Bağımsız --</option>
                         </select>
                     </div>
@@ -436,13 +496,13 @@
                 <!-- Priority & Initial Status -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">Öncelik Sırası (1 = En Yüksek)</label>
-                        <input type="number" id="form-priority" min="1" placeholder="Otomatik en sona ekle" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-slate-500">
-                        <p class="text-[11px] text-slate-500 mt-0.5">Araya eklenirse diğer kurallar otomatik +1 kaydırılır.</p>
+                        <label class="block font-semibold text-slate-700 mb-1">Öncelik Sırası (1 = En Yüksek)</label>
+                        <input type="number" id="form-priority" min="1" placeholder="Otomatik en sona ekle" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
+                        <p class="text-[11px] text-slate-400 mt-1">Araya eklenirse diğer kuralların önceliği otomatik +1 kaydırılır.</p>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-300 mb-1">Başlangıç Durumu</label>
-                        <select id="form-status" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                        <label class="block font-semibold text-slate-700 mb-1">Başlangıç Durumu</label>
+                        <select id="form-status" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                             <option value="PASIF" selected>PASİF (Önerilen)</option>
                             <option value="AKTIF">AKTİF</option>
                         </select>
@@ -450,10 +510,12 @@
                 </div>
 
                 <!-- Conditions Section (Strict Constraints Form) -->
-                <div class="border border-slate-800 bg-slate-950/60 rounded-lg p-4 space-y-3">
+                <div class="border border-slate-200 bg-slate-50/50 rounded-2xl p-4 space-y-3">
                     <div class="flex items-center justify-between">
-                        <label class="font-semibold text-slate-200">Koşullar (Tümü Sağlanmalı - AND)</label>
-                        <button type="button" onclick="addConditionRow()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-medium border border-slate-700 transition-colors">
+                        <label class="font-bold text-slate-800 flex items-center space-x-1.5">
+                            <span>🔍 Koşullar (Tümü Sağlanmalı - AND)</span>
+                        </label>
+                        <button type="button" onclick="addConditionRow()" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold border border-indigo-200 transition-all shadow-xs">
                             + Koşul Ekle
                         </button>
                     </div>
@@ -463,13 +525,13 @@
                 </div>
 
                 <!-- Action / Benefit Section -->
-                <div class="border border-slate-800 bg-slate-950/60 rounded-lg p-4 space-y-3">
-                    <label class="font-semibold text-slate-200 block">Uygulanacak Aksiyon (Fayda)</label>
+                <div class="border border-slate-200 bg-slate-50/50 rounded-2xl p-4 space-y-3">
+                    <label class="font-bold text-slate-800 block">🎁 Uygulanacak Aksiyon (Fayda)</label>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-slate-400 mb-1">Aksiyon Türü <span class="text-red-400">*</span></label>
-                            <select id="form-action-type" onchange="handleActionTypeChange()" required class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                            <label class="block font-semibold text-slate-600 mb-1">Aksiyon Türü <span class="text-rose-500">*</span></label>
+                            <select id="form-action-type" onchange="handleActionTypeChange()" required class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                                 <option value="YUZDE_INDIRIM">YUZDE_INDIRIM (%)</option>
                                 <option value="SABIT_INDIRIM">SABIT_INDIRIM (TL)</option>
                                 <option value="UCRETSIZ_KARGO">UCRETSIZ_KARGO</option>
@@ -480,20 +542,20 @@
 
                         <!-- Dynamic Action Value or Reference Selection -->
                         <div id="action-value-wrapper">
-                            <label id="action-value-label" class="block text-slate-400 mb-1">İndirim Yüzdesi (%)</label>
-                            <input type="number" step="0.1" id="form-action-value" placeholder="Örn: 10" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                            <label id="action-value-label" class="block font-semibold text-slate-600 mb-1">İndirim Yüzdesi (%)</label>
+                            <input type="number" step="0.1" id="form-action-value" placeholder="Örn: 10" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                         </div>
 
                         <div id="action-gift-wrapper" class="hidden">
-                            <label class="block text-slate-400 mb-1">Hediye Ürün Seçin <span class="text-red-400">*</span></label>
-                            <select id="form-gift-id" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                            <label class="block font-semibold text-slate-600 mb-1">Hediye Ürün Seçin <span class="text-rose-500">*</span></label>
+                            <select id="form-gift-id" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                                 <option value="">-- Stoklu Hediye Seçin --</option>
                             </select>
                         </div>
 
                         <div id="action-coupon-wrapper" class="hidden">
-                            <label class="block text-slate-400 mb-1">Kupon Şablonu Seçin <span class="text-red-400">*</span></label>
-                            <select id="form-coupon-id" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                            <label class="block font-semibold text-slate-600 mb-1">Kupon Şablonu Seçin <span class="text-rose-500">*</span></label>
+                            <select id="form-coupon-id" class="w-full bg-slate-50 border border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                                 <option value="">-- Geçerli Kupon Seçin --</option>
                             </select>
                         </div>
@@ -501,15 +563,15 @@
                 </div>
 
                 <!-- Error Display -->
-                <div id="modal-error" class="hidden p-3 rounded bg-red-950/60 border border-red-800 text-red-300 text-xs">
+                <div id="modal-error" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
                 </div>
 
                 <!-- Footer Buttons -->
                 <div class="flex items-center justify-end space-x-3 pt-2">
-                    <button type="button" onclick="closeRuleModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-medium transition-colors">
+                    <button type="button" onclick="closeRuleModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-all">
                         Vazgeç
                     </button>
-                    <button type="submit" class="px-5 py-2 bg-slate-100 hover:bg-white text-slate-900 rounded font-semibold transition-colors shadow">
+                    <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-md shadow-emerald-200">
                         Kaydet
                     </button>
                 </div>
@@ -518,13 +580,810 @@
     </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm px-4 py-3 rounded-lg border shadow-xl text-xs font-medium transition-all duration-300 transform translate-y-2">
-        <div class="flex items-center space-x-2">
-            <span id="toast-icon">ℹ️</span>
-            <span id="toast-msg">İşlem başarıyla tamamlandı.</span>
-        </div>
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm px-4 py-3.5 rounded-2xl border shadow-xl text-xs font-semibold transition-all duration-300 transform translate-y-2 flex items-center space-x-2.5">
+        <span id="toast-icon" class="text-base">ℹ️</span>
+        <span id="toast-msg">İşlem başarıyla tamamlandı.</span>
     </div>
 
-    <script src="/static/app.js"></script>
+    <!-- Frontend Logic Script (Light Theme + SortableJS Drag & Drop) -->
+    <script>
+        let state = {
+            rules: [],
+            campaigns: [],
+            gifts: [],
+            coupons: [],
+            currentTab: 'rules',
+            lastSimulationResult: null
+        };
+
+        const DAYS_OF_WEEK = [
+            { value: 'PAZARTESI', label: 'Pazartesi' },
+            { value: 'SALI', label: 'Salı' },
+            { value: 'CARSAMBA', label: 'Çarşamba' },
+            { value: 'PERSEMBE', label: 'Perşembe' },
+            { value: 'CUMA', label: 'Cuma' },
+            { value: 'CUMARTESI', label: 'Cumartesi' },
+            { value: 'PAZAR', label: 'Pazar' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        async function initApp() {
+            await refreshData();
+            resetConditionRows();
+        }
+
+        async function refreshData() {
+            try {
+                const [rulesRes, campRes, giftsRes, couponsRes] = await Promise.all([
+                    fetch('/api/v1/kurallar'),
+                    fetch('/api/v1/kampanyalar'),
+                    fetch('/api/v1/referanslar/hediye-urunler'),
+                    fetch('/api/v1/referanslar/kuponlar')
+                ]);
+
+                if (rulesRes.ok) state.rules = await rulesRes.json();
+                if (campRes.ok) state.campaigns = await campRes.json();
+                if (giftsRes.ok) state.gifts = await giftsRes.json();
+                if (couponsRes.ok) state.coupons = await couponsRes.json();
+
+                updateMetrics();
+                renderRulesTable();
+                renderReferences();
+                populateCampaignDropdown();
+                populateReferenceDropdowns();
+            } catch (err) {
+                showToast('Veriler yüklenirken hata oluştu: ' + err.message, 'error');
+            }
+        }
+
+        function updateMetrics() {
+            const activeCount = state.rules.filter(r => r.durum === 'AKTIF').length;
+            const totalCount = state.rules.length;
+            const giftsCount = state.gifts.length;
+            const couponsCount = state.coupons.length;
+
+            document.getElementById('stat-active-rules').innerText = activeCount;
+            document.getElementById('stat-total-rules').innerText = totalCount;
+            document.getElementById('stat-active-gifts').innerText = giftsCount;
+            document.getElementById('stat-active-coupons').innerText = couponsCount;
+            document.getElementById('tab-badge-rules').innerText = totalCount;
+        }
+
+        function switchTab(tabId) {
+            state.currentTab = tabId;
+            const tabs = ['rules', 'simulator', 'references'];
+            tabs.forEach(t => {
+                const view = document.getElementById(`view-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (t === tabId) {
+                    view.classList.remove('hidden');
+                    btn.className = 'px-4 py-2.5 rounded-lg bg-indigo-600 text-white shadow-sm flex items-center space-x-2 transition-all font-semibold';
+                } else {
+                    view.classList.add('hidden');
+                    btn.className = 'px-4 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-2 transition-all font-semibold';
+                }
+            });
+        }
+
+        // -------------------------------------------------------------
+        // Render Rules Table & SortableJS Drag & Drop
+        // -------------------------------------------------------------
+        function renderRulesTable() {
+            const tbody = document.getElementById('rules-table-body');
+            if (!state.rules.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-12 text-slate-400">
+                            Henüz tanımlanmış bir kampanya kuralı bulunmuyor. '+ Yeni Kural Ekle' butonuyla başlayın.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = state.rules.map((rule, idx) => {
+                const isAktif = rule.durum === 'AKTIF';
+
+                // Action badge
+                let actionBadge = `<span class="px-2.5 py-1 rounded-md font-mono text-[11px] bg-slate-100 text-slate-700 border border-slate-200">${rule.aksiyon?.aksiyon_tipi || '-'}</span>`;
+                if (rule.aksiyon) {
+                    const tip = rule.aksiyon.aksiyon_tipi;
+                    const val = rule.aksiyon.aksiyon_degeri;
+                    if (tip === 'YUZDE_INDIRIM') {
+                        actionBadge = `<span class="px-2.5 py-1 rounded-md font-mono text-[11px] bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold shadow-xs">💸 %${val} İndirim</span>`;
+                    } else if (tip === 'SABIT_INDIRIM') {
+                        actionBadge = `<span class="px-2.5 py-1 rounded-md font-mono text-[11px] bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold shadow-xs">💵 ₺${val} İndirim</span>`;
+                    } else if (tip === 'UCRETSIZ_KARGO') {
+                        actionBadge = `<span class="px-2.5 py-1 rounded-md text-[11px] bg-sky-50 border border-sky-200 text-sky-700 font-bold shadow-xs">📦 Ücretsiz Kargo</span>`;
+                    } else if (tip === 'HEDIYE_URUN_EKLE') {
+                        actionBadge = `<span class="px-2.5 py-1 rounded-md text-[11px] bg-purple-50 border border-purple-200 text-purple-700 font-bold shadow-xs">🎁 Hediye Ürün</span>`;
+                    } else if (tip === 'KUPON_TANIMLA') {
+                        actionBadge = `<span class="px-2.5 py-1 rounded-md text-[11px] bg-amber-50 border border-amber-200 text-amber-700 font-bold shadow-xs">🎟️ Kupon Tanımla</span>`;
+                    }
+                }
+
+                // Conditions badges
+                const conditionsHtml = (rule.kosullar || []).map(c => {
+                    let label = c.parametre;
+                    let displayVal = c.deger;
+                    if (c.parametre === 'sepet_tutari') {
+                        label = 'Sepet';
+                        displayVal = `₺${c.deger}`;
+                    } else if (c.parametre === 'kullanici_tipi') {
+                        label = 'Segment';
+                    } else if (c.parametre === 'islem_saati') {
+                        label = 'Saat';
+                    } else if (c.parametre === 'haftanin_gunu') {
+                        label = 'Gün';
+                    } else if (c.parametre === 'odeme_yontemi') {
+                        label = 'Ödeme';
+                    }
+                    return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] bg-slate-100 border border-slate-200 text-slate-700 space-x-1 mr-1 mb-1 shadow-2xs font-medium">
+                        <span class="text-slate-500 font-medium">${label}</span>
+                        <span class="text-indigo-600 font-mono font-bold">${c.operator}</span>
+                        <span class="text-slate-900 font-bold">${displayVal}</span>
+                    </span>`;
+                }).join('');
+
+                return `
+                    <tr data-rule-id="${rule.id}" class="hover:bg-indigo-50/30 transition-colors ${!isAktif ? 'opacity-65 bg-slate-50/40' : ''}">
+                        
+                        <!-- Drag Handle -->
+                        <td class="py-3 px-3 text-center">
+                            <div class="drag-handle inline-flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Sıralamak için sürükleyip bırakın">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8.5 7a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0 5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0 5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm7-10a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0 5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0 5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                                </svg>
+                            </div>
+                        </td>
+
+                        <!-- Priority Badge -->
+                        <td class="py-3 px-3 text-center">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg font-mono text-xs font-extrabold ${isAktif ? 'bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-xs' : 'bg-slate-100 text-slate-400 border border-slate-200'}">
+                                #${rule.oncelik_sirasi}
+                            </span>
+                        </td>
+
+                        <!-- Name & Campaign -->
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-slate-900 text-sm">${escapeHtml(rule.ad)}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">${rule.kampanya ? '📁 ' + escapeHtml(rule.kampanya.ad) : '🏷️ Bağımsız Kural'}</div>
+                        </td>
+
+                        <!-- Conditions -->
+                        <td class="py-3 px-4">
+                            <div class="flex flex-wrap items-center">
+                                ${conditionsHtml || '<span class="text-slate-400 italic">Koşulsuz (Her sepete uyar)</span>'}
+                            </div>
+                        </td>
+
+                        <!-- Action -->
+                        <td class="py-3 px-4">
+                            ${actionBadge}
+                        </td>
+
+                        <!-- Status Toggle -->
+                        <td class="py-3 px-4 text-center">
+                            <button type="button" onclick="toggleRuleStatus(${rule.id}, '${isAktif ? 'PASIF' : 'AKTIF'}')" class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all shadow-xs ${
+                                isAktif 
+                                ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100' 
+                                : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200'
+                            }">
+                                <span class="w-2 h-2 rounded-full ${isAktif ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}"></span>
+                                <span>${rule.durum}</span>
+                            </button>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="py-3 px-4 text-right">
+                            <div class="inline-flex items-center space-x-1">
+                                <button type="button" onclick="deleteRule(${rule.id})" title="Kuralı Sil" class="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Initialize SortableJS
+            initSortable();
+        }
+
+        function initSortable() {
+            const el = document.getElementById('rules-table-body');
+            if (!el || !window.Sortable) return;
+
+            if (window.rulesSortableInstance) {
+                window.rulesSortableInstance.destroy();
+            }
+
+            window.rulesSortableInstance = new Sortable(el, {
+                handle: '.drag-handle',
+                animation: 200,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                onEnd: async function (evt) {
+                    const ruleId = parseInt(evt.item.getAttribute('data-rule-id'));
+                    const newPriority = evt.newIndex + 1;
+                    const oldPriority = evt.oldIndex + 1;
+                    if (newPriority === oldPriority) return;
+
+                    await shiftRulePriority(ruleId, newPriority);
+                }
+            });
+        }
+
+        // -------------------------------------------------------------
+        // References Inventory Rendering
+        // -------------------------------------------------------------
+        function renderReferences() {
+            // Gifts
+            const giftsBody = document.getElementById('gifts-table-body');
+            giftsBody.innerHTML = state.gifts.map(g => `
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                    <td class="py-2.5 font-mono font-bold text-slate-500">${escapeHtml(g.stok_kodu)}</td>
+                    <td class="py-2.5 font-semibold text-slate-800">${escapeHtml(g.urun_adi)}</td>
+                    <td class="py-2.5 text-center font-mono font-bold ${g.stok_adedi > 0 ? 'text-emerald-600' : 'text-rose-500'}">${g.stok_adedi} adet</td>
+                    <td class="py-2.5 text-right">
+                        <span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${g.durum === 'AKTIF' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}">${g.durum}</span>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Coupons
+            const couponsBody = document.getElementById('coupons-table-body');
+            couponsBody.innerHTML = state.coupons.map(c => `
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                    <td class="py-2.5 font-mono font-bold text-amber-700 bg-amber-50 px-2 rounded">${escapeHtml(c.kupon_kodu)}</td>
+                    <td class="py-2.5 font-mono font-bold text-slate-800">₺${c.indirim_tutari}</td>
+                    <td class="py-2.5 text-center font-mono font-bold ${c.kullanim_limiti > 0 ? 'text-emerald-600' : 'text-rose-500'}">${c.kullanim_limiti}</td>
+                    <td class="py-2.5 text-right">
+                        <span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${c.durum === 'AKTIF' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}">${c.durum}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function populateCampaignDropdown() {
+            const select = document.getElementById('form-campaign-id');
+            select.innerHTML = '<option value="">-- Kampanyasız / Bağımsız --</option>' +
+                state.campaigns.map(c => `<option value="${c.id}">${escapeHtml(c.ad)}</option>`).join('');
+        }
+
+        function populateReferenceDropdowns() {
+            const giftSelect = document.getElementById('form-gift-id');
+            const couponSelect = document.getElementById('form-coupon-id');
+
+            giftSelect.innerHTML = '<option value="">-- Stoklu Hediye Seçin --</option>' +
+                state.gifts.filter(g => g.durum === 'AKTIF' && g.stok_adedi > 0)
+                           .map(g => `<option value="${g.id}">${escapeHtml(g.urun_adi)} (${g.stok_adedi} Stok)</option>`).join('');
+
+            couponSelect.innerHTML = '<option value="">-- Geçerli Kupon Seçin --</option>' +
+                state.coupons.filter(c => c.durum === 'AKTIF' && c.kullanim_limiti > 0)
+                             .map(c => `<option value="${c.id}">${escapeHtml(c.kupon_kodu)} (₺${c.indirim_tutari} İndirim - ${c.kullanim_limiti} Limit)</option>`).join('');
+        }
+
+        // -------------------------------------------------------------
+        // Modal & Form Logic
+        // -------------------------------------------------------------
+        function openCreateRuleModal() {
+            document.getElementById('modal-title').innerText = 'Yeni Kampanya Kuralı Tanımla';
+            document.getElementById('form-rule-id').value = '';
+            document.getElementById('form-rule-name').value = '';
+            document.getElementById('form-campaign-id').value = '';
+            document.getElementById('form-priority').value = '';
+            document.getElementById('form-status').value = 'PASIF';
+            document.getElementById('form-action-type').value = 'YUZDE_INDIRIM';
+            document.getElementById('form-action-value').value = '';
+            document.getElementById('modal-error').classList.add('hidden');
+
+            handleActionTypeChange();
+            resetConditionRows();
+            document.getElementById('rule-modal').classList.remove('hidden');
+        }
+
+        function closeRuleModal() {
+            document.getElementById('rule-modal').classList.add('hidden');
+        }
+
+        function resetConditionRows() {
+            const container = document.getElementById('conditions-container');
+            container.innerHTML = '';
+            addConditionRow('sepet_tutari', '>=', '500');
+        }
+
+        function addConditionRow(defaultParam = 'sepet_tutari', defaultOp = '>=', defaultVal = '') {
+            const container = document.getElementById('conditions-container');
+            const rowIndex = Date.now() + Math.random().toString(36).substr(2, 5);
+
+            const row = document.createElement('div');
+            row.id = `cond-row-${rowIndex}`;
+            row.className = 'grid grid-cols-12 gap-2 items-center bg-white border border-slate-200 p-2.5 rounded-xl shadow-xs';
+
+            row.innerHTML = `
+                <div class="col-span-4">
+                    <select class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800 text-xs font-semibold focus:outline-none focus:border-indigo-500 param-select" onchange="handleParamChange('${rowIndex}')">
+                        <option value="sepet_tutari" ${defaultParam === 'sepet_tutari' ? 'selected' : ''}>sepet_tutari</option>
+                        <option value="kullanici_tipi" ${defaultParam === 'kullanici_tipi' ? 'selected' : ''}>kullanici_tipi</option>
+                        <option value="odeme_yontemi" ${defaultParam === 'odeme_yontemi' ? 'selected' : ''}>odeme_yontemi</option>
+                        <option value="haftanin_gunu" ${defaultParam === 'haftanin_gunu' ? 'selected' : ''}>haftanin_gunu</option>
+                        <option value="islem_saati" ${defaultParam === 'islem_saati' ? 'selected' : ''}>islem_saati</option>
+                    </select>
+                </div>
+                <div class="col-span-3">
+                    <select class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-indigo-700 text-xs font-mono font-bold focus:outline-none focus:border-indigo-500 op-select" onchange="handleOperatorChange('${rowIndex}')">
+                    </select>
+                </div>
+                <div class="col-span-4 val-container">
+                </div>
+                <div class="col-span-1 text-right">
+                    <button type="button" onclick="removeConditionRow('${rowIndex}')" class="w-6 h-6 rounded-md hover:bg-rose-50 text-slate-400 hover:text-rose-600 text-sm font-bold transition-colors">&times;</button>
+                </div>
+            `;
+
+            container.appendChild(row);
+            renderOperatorAndValueInput(rowIndex, defaultParam, defaultOp, defaultVal);
+        }
+
+        function removeConditionRow(rowIndex) {
+            const row = document.getElementById(`cond-row-${rowIndex}`);
+            if (row) row.remove();
+        }
+
+        function handleParamChange(rowIndex) {
+            const row = document.getElementById(`cond-row-${rowIndex}`);
+            const param = row.querySelector('.param-select').value;
+            renderOperatorAndValueInput(rowIndex, param);
+        }
+
+        function handleOperatorChange(rowIndex) {
+            const row = document.getElementById(`cond-row-${rowIndex}`);
+            const param = row.querySelector('.param-select').value;
+            const op = row.querySelector('.op-select').value;
+            renderValueInput(rowIndex, param, op);
+        }
+
+        function renderOperatorAndValueInput(rowIndex, param, selectedOp = null, selectedVal = '') {
+            const row = document.getElementById(`cond-row-${rowIndex}`);
+            const opSelect = row.querySelector('.op-select');
+
+            let ops = [];
+            if (param === 'sepet_tutari') {
+                ops = [
+                    { val: '>=', label: '>=' },
+                    { val: '<=', label: '<=' },
+                    { val: '>', label: '>' },
+                    { val: '<', label: '<' },
+                    { val: '==', label: '==' }
+                ];
+            } else if (param === 'kullanici_tipi' || param === 'odeme_yontemi') {
+                ops = [{ val: '==', label: '==' }];
+            } else if (param === 'haftanin_gunu') {
+                ops = [
+                    { val: '==', label: '==' },
+                    { val: 'ICINDEDIR', label: 'ICINDEDIR' }
+                ];
+            } else if (param === 'islem_saati') {
+                ops = [
+                    { val: '>=', label: '>=' },
+                    { val: '<=', label: '<=' },
+                    { val: '==', label: '==' }
+                ];
+            }
+
+            opSelect.innerHTML = ops.map(o => `<option value="${o.val}" ${selectedOp === o.val ? 'selected' : ''}>${o.label}</option>`).join('');
+            renderValueInput(rowIndex, param, opSelect.value, selectedVal);
+        }
+
+        function renderValueInput(rowIndex, param, op, selectedVal = '') {
+            const row = document.getElementById(`cond-row-${rowIndex}`);
+            const valContainer = row.querySelector('.val-container');
+
+            if (param === 'sepet_tutari') {
+                valContainer.innerHTML = `
+                    <input type="number" step="0.01" min="0" required class="val-input w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-slate-900 text-xs font-mono font-bold focus:outline-none focus:border-indigo-500" placeholder="Tutar" value="${selectedVal || '500'}">
+                `;
+            } else if (param === 'kullanici_tipi') {
+                valContainer.innerHTML = `
+                    <select required class="val-input w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-xs font-semibold focus:outline-none focus:border-indigo-500">
+                        <option value="VIP" ${selectedVal === 'VIP' ? 'selected' : ''}>VIP</option>
+                        <option value="STANDART" ${selectedVal === 'STANDART' || !selectedVal ? 'selected' : ''}>STANDART</option>
+                        <option value="YENI" ${selectedVal === 'YENI' ? 'selected' : ''}>YENI</option>
+                    </select>
+                `;
+            } else if (param === 'odeme_yontemi') {
+                valContainer.innerHTML = `
+                    <select required class="val-input w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-xs font-semibold focus:outline-none focus:border-indigo-500">
+                        <option value="KREDI_KARTI" ${selectedVal === 'KREDI_KARTI' || !selectedVal ? 'selected' : ''}>KREDI_KARTI</option>
+                        <option value="HAVALE" ${selectedVal === 'HAVALE' ? 'selected' : ''}>HAVALE</option>
+                        <option value="KAPIDA_ODEME" ${selectedVal === 'KAPIDA_ODEME' ? 'selected' : ''}>KAPIDA_ODEME</option>
+                    </select>
+                `;
+            } else if (param === 'haftanin_gunu') {
+                if (op === '==') {
+                    valContainer.innerHTML = `
+                        <select required class="val-input w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-xs font-semibold focus:outline-none focus:border-indigo-500">
+                            ${DAYS_OF_WEEK.map(d => `<option value="${d.value}" ${selectedVal === d.value ? 'selected' : ''}>${d.value}</option>`).join('')}
+                        </select>
+                    `;
+                } else {
+                    valContainer.innerHTML = `
+                        <select required class="val-input w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 text-xs font-semibold focus:outline-none focus:border-indigo-500">
+                            <option value="CUMARTESI,PAZAR" ${selectedVal === 'CUMARTESI,PAZAR' || !selectedVal ? 'selected' : ''}>Hafta Sonu (Cmt, Paz)</option>
+                            <option value="PAZARTESI,SALI,CARSAMBA,PERSEMBE,CUMA" ${selectedVal === 'PAZARTESI,SALI,CARSAMBA,PERSEMBE,CUMA' ? 'selected' : ''}>Hafta İçi (Pzt-Cum)</option>
+                            <option value="CUMA,CUMARTESI,PAZAR" ${selectedVal === 'CUMA,CUMARTESI,PAZAR' ? 'selected' : ''}>Cuma + Hafta Sonu</option>
+                        </select>
+                    `;
+                }
+            } else if (param === 'islem_saati') {
+                valContainer.innerHTML = `
+                    <input type="time" required class="val-input w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-slate-900 text-xs font-mono font-bold focus:outline-none focus:border-indigo-500" value="${selectedVal || '22:00'}">
+                `;
+            }
+        }
+
+        function handleActionTypeChange() {
+            const actionType = document.getElementById('form-action-type').value;
+            const valueWrapper = document.getElementById('action-value-wrapper');
+            const giftWrapper = document.getElementById('action-gift-wrapper');
+            const couponWrapper = document.getElementById('action-coupon-wrapper');
+            const valueLabel = document.getElementById('action-value-label');
+            const valueInput = document.getElementById('form-action-value');
+
+            valueWrapper.classList.add('hidden');
+            giftWrapper.classList.add('hidden');
+            couponWrapper.classList.add('hidden');
+
+            if (actionType === 'YUZDE_INDIRIM') {
+                valueWrapper.classList.remove('hidden');
+                valueLabel.innerText = 'İndirim Yüzdesi (% 1-100)';
+                valueInput.placeholder = 'Örn: 10';
+                valueInput.min = '1';
+                valueInput.max = '100';
+            } else if (actionType === 'SABIT_INDIRIM') {
+                valueWrapper.classList.remove('hidden');
+                valueLabel.innerText = 'Sabit İndirim Tutarı (TL)';
+                valueInput.placeholder = 'Örn: 150';
+                valueInput.removeAttribute('max');
+            } else if (actionType === 'HEDIYE_URUN_EKLE') {
+                giftWrapper.classList.remove('hidden');
+            } else if (actionType === 'KUPON_TANIMLA') {
+                couponWrapper.classList.remove('hidden');
+            }
+        }
+
+        async function saveRule() {
+            const errorDiv = document.getElementById('modal-error');
+            errorDiv.classList.add('hidden');
+
+            const name = document.getElementById('form-rule-name').value.trim();
+            const campaignId = document.getElementById('form-campaign-id').value;
+            const priorityVal = document.getElementById('form-priority').value;
+            const status = document.getElementById('form-status').value;
+            const actionType = document.getElementById('form-action-type').value;
+
+            if (!name) {
+                showModalError('Lütfen bir kural adı girin.');
+                return;
+            }
+
+            const conditionRows = document.querySelectorAll('#conditions-container > div');
+            if (!conditionRows.length) {
+                showModalError('En az 1 adet koşul eklenmelidir.');
+                return;
+            }
+
+            const kosullar = [];
+            for (const row of conditionRows) {
+                const param = row.querySelector('.param-select').value;
+                const op = row.querySelector('.op-select').value;
+                const valInput = row.querySelector('.val-input');
+                const val = valInput ? valInput.value.trim() : '';
+
+                if (!val) {
+                    showModalError(`'${param}' koşulu için bir değer belirtilmelidir.`);
+                    return;
+                }
+                kosullar.push({ parametre: param, operator: op, deger: val });
+            }
+
+            const aksiyon = { aksiyon_tipi: actionType };
+            if (actionType === 'YUZDE_INDIRIM' || actionType === 'SABIT_INDIRIM') {
+                const val = parseFloat(document.getElementById('form-action-value').value);
+                if (isNaN(val) || val <= 0) {
+                    showModalError('Geçerli bir indirim tutarı / yüzdesi girin.');
+                    return;
+                }
+                aksiyon.aksiyon_degeri = val;
+            } else if (actionType === 'HEDIYE_URUN_EKLE') {
+                const giftId = parseInt(document.getElementById('form-gift-id').value);
+                if (!giftId) {
+                    showModalError('Lütfen listeden aktif bir hediye ürün seçin.');
+                    return;
+                }
+                aksiyon.hediye_urun_id = giftId;
+            } else if (actionType === 'KUPON_TANIMLA') {
+                const couponId = parseInt(document.getElementById('form-coupon-id').value);
+                if (!couponId) {
+                    showModalError('Lütfen listeden geçerli bir kupon şablonu seçin.');
+                    return;
+                }
+                aksiyon.kupon_sablon_id = couponId;
+            }
+
+            const payload = {
+                ad: name,
+                kampanya_id: campaignId ? parseInt(campaignId) : null,
+                oncelik_sirasi: priorityVal ? parseInt(priorityVal) : null,
+                durum: status,
+                kosullar: kosullar,
+                aksiyon: aksiyon
+            };
+
+            try {
+                const res = await fetch('/api/v1/kurallar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    const errorMsg = data.message || data.detail || 'Kural kaydedilemedi.';
+                    showModalError(errorMsg);
+                    return;
+                }
+
+                closeRuleModal();
+                await refreshData();
+                showToast(`Kural başarıyla oluşturuldu (${data.durum})`, 'success');
+            } catch (err) {
+                showModalError('Ağ hatası: ' + err.message);
+            }
+        }
+
+        function showModalError(msg) {
+            const errorDiv = document.getElementById('modal-error');
+            errorDiv.innerText = msg;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // -------------------------------------------------------------
+        // Quick Actions (Toggle Status, Priority Shift, Delete)
+        // -------------------------------------------------------------
+        async function toggleRuleStatus(ruleId, newStatus) {
+            try {
+                const res = await fetch(`/api/v1/kurallar/${ruleId}/durum`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ durum: newStatus })
+                });
+                if (res.ok) {
+                    await refreshData();
+                    showToast(`Kural durumu '${newStatus}' olarak güncellendi.`, 'info');
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || 'Durum değiştirilemedi.', 'error');
+                }
+            } catch (err) {
+                showToast('Hata: ' + err.message, 'error');
+            }
+        }
+
+        async function shiftRulePriority(ruleId, newPriority) {
+            if (newPriority < 1) return;
+            try {
+                const res = await fetch(`/api/v1/kurallar/${ruleId}/oncelik`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ yeni_oncelik: newPriority })
+                });
+                if (res.ok) {
+                    await refreshData();
+                    showToast(`Öncelik sırası #${newPriority} olarak güncellendi.`, 'success');
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail || 'Sıra güncellenemedi.', 'error');
+                    await refreshData();
+                }
+            } catch (err) {
+                showToast('Hata: ' + err.message, 'error');
+                await refreshData();
+            }
+        }
+
+        async function deleteRule(ruleId) {
+            if (!confirm('Bu kuralı silmek istediğinize emin misiniz?')) return;
+            try {
+                const res = await fetch(`/api/v1/kurallar/${ruleId}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    await refreshData();
+                    showToast('Kural başarıyla silindi.', 'info');
+                } else {
+                    showToast('Kural silinemedi.', 'error');
+                }
+            } catch (err) {
+                showToast('Hata: ' + err.message, 'error');
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Cart Simulator Engine Call
+        // -------------------------------------------------------------
+        async function runSimulation() {
+            const sepetTutari = parseFloat(document.getElementById('sim_sepet_tutari').value);
+            const kullaniciTipi = document.getElementById('sim_kullanici_tipi').value;
+            const odemeYontemi = document.getElementById('sim_odeme_yontemi').value;
+            const haftaninGunu = document.getElementById('sim_haftanin_gunu').value;
+            const islemSaati = document.getElementById('sim_islem_saati').value;
+
+            const payload = {
+                sepet_tutari: isNaN(sepetTutari) ? 0 : sepetTutari,
+                kullanici_tipi: kullaniciTipi,
+                odeme_yontemi: odemeYontemi,
+                haftanin_gunu: haftaninGunu,
+                islem_saati: islemSaati
+            };
+
+            const startTime = performance.now();
+
+            try {
+                const res = await fetch('/api/v1/kampanya/degerlendir', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const execTime = (performance.now() - startTime).toFixed(1);
+                const data = await res.json();
+                state.lastSimulationResult = data;
+
+                document.getElementById('sim-exec-time').innerText = `${execTime} ms`;
+                document.getElementById('json-viewer').innerText = JSON.stringify(data, null, 2);
+
+                const origEl = document.getElementById('res-orig-price');
+                const discEl = document.getElementById('res-discount');
+                const finalEl = document.getElementById('res-final-price');
+                const statusBadge = document.getElementById('sim-status-badge');
+                const hitBadge = document.getElementById('sim-hit-badge');
+                const benefitBox = document.getElementById('sim-benefit-box');
+                const msgBox = document.getElementById('sim-message-box');
+                const extraRow = document.getElementById('res-extra-benefit-row');
+                const extraVal = document.getElementById('res-extra-benefit-val');
+
+                if (!res.ok) {
+                    statusBadge.innerText = `Hata (${res.status})`;
+                    statusBadge.className = 'px-3 py-1 rounded-full text-xs font-mono font-bold bg-rose-100 text-rose-700 border border-rose-200';
+                    hitBadge.classList.add('hidden');
+                    benefitBox.classList.add('hidden');
+                    msgBox.innerText = data.message || 'Geçersiz parametre girişi.';
+                    return;
+                }
+
+                origEl.innerText = `₺${(data.orijinal_tutar || 0).toFixed(2)}`;
+                discEl.innerText = `-₺${(data.indirim_tutari || 0).toFixed(2)}`;
+                finalEl.innerText = `₺${(data.odenecek_tutar || 0).toFixed(2)}`;
+
+                if (data.fallback_applied) {
+                    statusBadge.innerText = 'Fallback (0 TL İndirim)';
+                    statusBadge.className = 'px-3 py-1 rounded-full text-xs font-mono font-bold bg-amber-100 text-amber-800 border border-amber-200';
+                    hitBadge.classList.add('hidden');
+                    benefitBox.classList.add('hidden');
+                    msgBox.innerText = data.mesaj || 'Sunucu koruması devreye girdi.';
+                    return;
+                }
+
+                if (data.uygulanan_kural_id) {
+                    statusBadge.innerText = '200 OK - İndirim Uygulandı';
+                    statusBadge.className = 'px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-200';
+                    hitBadge.classList.remove('hidden');
+                    hitBadge.innerText = `🎯 Kural #${data.uygulanan_kural_id} Kazandı`;
+                    benefitBox.classList.remove('hidden');
+
+                    document.getElementById('res-rule-name').innerText = data.kampanya_adi || `Kural #${data.uygulanan_kural_id}`;
+                    document.getElementById('res-action-type').innerText = data.aksiyon_tipi;
+
+                    if (data.ek_fayda) {
+                        extraRow.classList.remove('hidden');
+                        extraVal.innerText = data.ek_fayda.aciklama || data.ek_fayda.urun_adi || data.ek_fayda.kupon_kodu || JSON.stringify(data.ek_fayda);
+                    } else {
+                        extraRow.classList.add('hidden');
+                    }
+
+                    msgBox.innerText = data.mesaj || 'Kampanya başarıyla sepete uygulandı.';
+                } else {
+                    statusBadge.innerText = '200 OK - 0 TL İndirim';
+                    statusBadge.className = 'px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-600 border border-slate-200';
+                    hitBadge.classList.add('hidden');
+                    benefitBox.classList.add('hidden');
+                    msgBox.innerText = data.mesaj || 'Hiçbir kampanya kuralı eşleşmedi.';
+                }
+
+            } catch (err) {
+                document.getElementById('sim-status-badge').innerText = 'Bağlantı Hatası';
+                document.getElementById('sim-message-box').innerText = 'Servise ulaşılamadı: ' + err.message;
+            }
+        }
+
+        function loadScenario(type) {
+            if (type === 'weekend_discount') {
+                document.getElementById('sim_sepet_tutari').value = '600.00';
+                document.getElementById('sim_kullanici_tipi').value = 'STANDART';
+                document.getElementById('sim_odeme_yontemi').value = 'KREDI_KARTI';
+                document.getElementById('sim_haftanin_gunu').value = 'PAZAR';
+                document.getElementById('sim_islem_saati').value = '14:30';
+            } else if (type === 'vip_order') {
+                document.getElementById('sim_sepet_tutari').value = '1200.00';
+                document.getElementById('sim_kullanici_tipi').value = 'VIP';
+                document.getElementById('sim_odeme_yontemi').value = 'KREDI_KARTI';
+                document.getElementById('sim_haftanin_gunu').value = 'CARSAMBA';
+                document.getElementById('sim_islem_saati').value = '15:00';
+            } else if (type === 'night_order') {
+                document.getElementById('sim_sepet_tutari').value = '400.00';
+                document.getElementById('sim_kullanici_tipi').value = 'STANDART';
+                document.getElementById('sim_odeme_yontemi').value = 'HAVALE';
+                document.getElementById('sim_haftanin_gunu').value = 'PERSEMBE';
+                document.getElementById('sim_islem_saati').value = '23:30';
+            } else if (type === 'gift_cart') {
+                document.getElementById('sim_sepet_tutari').value = '800.00';
+                document.getElementById('sim_kullanici_tipi').value = 'STANDART';
+                document.getElementById('sim_odeme_yontemi').value = 'KREDI_KARTI';
+                document.getElementById('sim_haftanin_gunu').value = 'SALI';
+                document.getElementById('sim_islem_saati').value = '16:00';
+            }
+            runSimulation();
+        }
+
+        function copyJsonResponse() {
+            if (!state.lastSimulationResult) return;
+            navigator.clipboard.writeText(JSON.stringify(state.lastSimulationResult, null, 2));
+            showToast('JSON yanıtı panoya kopyalandı.', 'success');
+        }
+
+        let toastTimer = null;
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+            toast.className = 'fixed bottom-5 right-5 z-50 max-w-sm px-4 py-3.5 rounded-2xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-0 flex items-center space-x-2.5 ';
+
+            if (type === 'success') {
+                toast.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+                toastIcon.innerText = '✓';
+            } else if (type === 'error') {
+                toast.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800');
+                toastIcon.innerText = '⚠️';
+            } else {
+                toast.classList.add('bg-indigo-50', 'border-indigo-200', 'text-indigo-900');
+                toastIcon.innerText = 'ℹ️';
+            }
+
+            toast.classList.remove('hidden');
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Global aliases for legacy/Turkish function names
+        window.kuralEkle = openCreateRuleModal;
+        window.kuralSil = deleteRule;
+        window.durumDegistir = toggleRuleStatus;
+        window.sepetiDegerlendir = runSimulation;
+    </script>
 </body>
 </html>
