@@ -1,182 +1,142 @@
 """
-seed.py – Veritabanı başlangıç verilerini oluşturur (idempotent).
-Konteyner ayağa kalktığında otomatik çalışır.
+seed.py – Initial data seeder for test campaigns, rules, conditions, actions, gift items, and coupons.
 """
-import logging
-import time
-from decimal import Decimal
-
-from sqlalchemy import text
-from sqlalchemy.exc import OperationalError
-
-from app.database import SessionLocal, engine
+from datetime import datetime, timedelta
+from app.database import SessionLocal, init_db
 from app.models import (
-    AksiyonTipi,
-    Base,
-    HediyeUrun,
-    Kampanya,
-    KuralDurumu,
-    KuponSablonu,
-    Operator,
-    Parametre,
-    Aksiyon,
-    Kosul,
-    Kural,
+    Kampanya, Kural, Kosul, Aksiyon, HediyeUrun, KuponSablon,
+    KuralDurumu, ParametreAdi, OperatorTipi, AksiyonTipi
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-
-def bekle_ve_baglan(max_deneme: int = 15, bekleme_suresi: float = 3.0):
-    """PostgreSQL hazır olana kadar bekler."""
-    for deneme in range(1, max_deneme + 1):
-        try:
-            with engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-            logger.info("✅ Veritabanı bağlantısı kuruldu.")
-            return
-        except OperationalError:
-            logger.warning(f"⏳ Veritabanı bekleniyor... ({deneme}/{max_deneme})")
-            time.sleep(bekleme_suresi)
-    raise RuntimeError("❌ Veritabanına bağlanılamadı!")
-
-
-def seed():
-    bekle_ve_baglan()
-    Base.metadata.create_all(bind=engine)
-    logger.info("📦 Tablolar oluşturuldu / kontrol edildi.")
-
+def seed_database():
+    """Veritabanını örnek başlangıç verileriyle doldurur."""
+    init_db()
     db = SessionLocal()
+
     try:
-        # İdempotent kontrol
-        if db.query(Kampanya).count() > 0:
-            logger.info("ℹ️  Seed verisi zaten mevcut, atlanıyor.")
+        # Eğer zaten veriler varsa tekrar ekleme
+        if db.query(Kural).first():
+            print("Veritabanı zaten dolu, seed adımı atlandı.")
             return
 
-        # ── Hediye Ürünler ────────────────────────────────────────────────────
-        hediye1 = HediyeUrun(
-            stok_kodu="HEDIYE-001",
-            urun_adi="Premium Kol Saati",
-            stok_adedi=50,
-            durum="AKTIF",
-        )
-        hediye2 = HediyeUrun(
-            stok_kodu="HEDIYE-002",
-            urun_adi="Deri Cüzdan",
-            stok_adedi=100,
-            durum="AKTIF",
-        )
-        db.add_all([hediye1, hediye2])
+        print("Veritabanı seed işlemi başlatılıyor...")
+
+        # 1. Hediye Ürünler
+        hediye1 = HediyeUrun(stok_kodu="HED-TERMOS", urun_adi="Paslanmaz Çelik Termos Bardak", stok_adedi=50, durum="AKTIF")
+        hediye2 = HediyeUrun(stok_kodu="HED-CANTA", urun_adi="Organik Bez Alışveriş Çantası", stok_adedi=120, durum="AKTIF")
+        hediye3 = HediyeUrun(stok_kodu="HED-KULAKLIK", urun_adi="Kablosuz Bluetooth Kulaklık", stok_adedi=0, durum="PASIF")
+        db.add_all([hediye1, hediye2, hediye3])
         db.flush()
 
-        # ── Kupon Şablonları ──────────────────────────────────────────────────
-        kupon1 = KuponSablonu(
-            kupon_kodu="VIPINDIRIM50",
-            indirim_tutari=Decimal("50.00"),
-            kullanim_limiti=1,
-            durum="AKTIF",
-        )
-        kupon2 = KuponSablonu(
-            kupon_kodu="HAFTSONU25",
-            indirim_tutari=Decimal("25.00"),
-            kullanim_limiti=3,
-            durum="AKTIF",
-        )
-        db.add_all([kupon1, kupon2])
+        # 2. Kupon Şablonları
+        kupon1 = KuponSablon(kupon_kodu="KUPON100", indirim_tutari=100.0, kullanim_limiti=50, durum="AKTIF")
+        kupon2 = KuponSablon(kupon_kodu="KUPON50", indirim_tutari=50.0, kullanim_limiti=200, durum="AKTIF")
+        kupon3 = KuponSablon(kupon_kodu="KUPONBITTI", indirim_tutari=25.0, kullanim_limiti=0, durum="PASIF")
+        db.add_all([kupon1, kupon2, kupon3])
         db.flush()
 
-        # ── Kampanyalar ───────────────────────────────────────────────────────
+        # 3. Kampanyalar
         kampanya1 = Kampanya(
-            ad="VIP Yaz Kampanyası 2024",
-            aciklama="VIP müşterilere özel yüksek sepet tutarlarında indirim kampanyası.",
+            ad="Hafta Sonu & Bahar Festivali",
+            aciklama="Hafta sonuna özel sepet ve kategori indirimleri",
+            baslangic_tarihi=datetime.utcnow() - timedelta(days=1),
+            bitis_tarihi=datetime.utcnow() + timedelta(days=60)
         )
         kampanya2 = Kampanya(
-            ad="Hafta Sonu Fırsatları",
-            aciklama="Cumartesi ve Pazar günleri geçerli kampanya paketi.",
+            ad="VIP Sadakat ve Gece Fırsatları",
+            aciklama="Sadık müşterilere ve gece alışverişlerine özel avantajlar",
+            baslangic_tarihi=datetime.utcnow() - timedelta(days=1),
+            bitis_tarihi=datetime.utcnow() + timedelta(days=90)
         )
         db.add_all([kampanya1, kampanya2])
         db.flush()
 
-        # ── Kurallar & Koşullar & Aksiyonlar ──────────────────────────────────
-
-        # Kural 1 – Öncelik 1: VIP + 1000 TL üzeri → %20 indirim
+        # 4. Kurallar, Koşullar ve Aksiyonlar
+        # Kural 1: Hafta Sonu 500 TL Üzerine %10 İndirim
         kural1 = Kural(
             kampanya_id=kampanya1.id,
-            ad="VIP Büyük Sepet %20 İndirim",
+            ad="Hafta Sonu 500 TL Üzerine %10 İndirim",
             oncelik_sirasi=1,
-            durum=KuralDurumu.AKTIF,
+            durum=KuralDurumu.AKTIF.value
         )
         db.add(kural1)
         db.flush()
-        db.add_all([
-            Kosul(kural_id=kural1.id, parametre=Parametre.KULLANICI_TIPI, operator=Operator.ESITTIR, deger="VIP"),
-            Kosul(kural_id=kural1.id, parametre=Parametre.SEPET_TUTARI, operator=Operator.BUYUK_ESIT, deger="1000"),
-        ])
-        db.add(Aksiyon(kural_id=kural1.id, aksiyon_tipi=AksiyonTipi.YUZDE_INDIRIM, aksiyon_degeri=Decimal("20")))
 
-        # Kural 2 – Öncelik 2: VIP + 500–999 TL → %10 indirim
+        k1_c1 = Kosul(kural_id=kural1.id, parametre=ParametreAdi.SEPET_TUTARI.value, operator=OperatorTipi.BUYUK_ESIT.value, deger="500")
+        k1_c2 = Kosul(kural_id=kural1.id, parametre=ParametreAdi.HAFTANIN_GUNU.value, operator=OperatorTipi.ICINDEDIR.value, deger="CUMARTESI,PAZAR")
+        k1_a1 = Aksiyon(kural_id=kural1.id, aksiyon_tipi=AksiyonTipi.YUZDE_INDIRIM.value, aksiyon_degeri=10.0)
+        db.add_all([k1_c1, k1_c2, k1_a1])
+
+        # Kural 2: VIP Müşterilere 1000 TL Üzeri 150 TL İndirim
         kural2 = Kural(
-            kampanya_id=kampanya1.id,
-            ad="VIP Orta Sepet %10 İndirim",
+            kampanya_id=kampanya2.id,
+            ad="VIP Müşterilere 1000 TL Üzeri 150 TL İndirim",
             oncelik_sirasi=2,
-            durum=KuralDurumu.AKTIF,
+            durum=KuralDurumu.AKTIF.value
         )
         db.add(kural2)
         db.flush()
-        db.add_all([
-            Kosul(kural_id=kural2.id, parametre=Parametre.KULLANICI_TIPI, operator=Operator.ESITTIR, deger="VIP"),
-            Kosul(kural_id=kural2.id, parametre=Parametre.SEPET_TUTARI, operator=Operator.BUYUK_ESIT, deger="500"),
-            Kosul(kural_id=kural2.id, parametre=Parametre.SEPET_TUTARI, operator=Operator.KUCUK_ESIT, deger="999"),
-        ])
-        db.add(Aksiyon(kural_id=kural2.id, aksiyon_tipi=AksiyonTipi.YUZDE_INDIRIM, aksiyon_degeri=Decimal("10")))
 
-        # Kural 3 – Öncelik 3: Hafta sonu + Kredi Kartı → Ücretsiz kargo
+        k2_c1 = Kosul(kural_id=kural2.id, parametre=ParametreAdi.KULLANICI_TIPI.value, operator=OperatorTipi.ESITTIR.value, deger="VIP")
+        k2_c2 = Kosul(kural_id=kural2.id, parametre=ParametreAdi.SEPET_TUTARI.value, operator=OperatorTipi.BUYUK_ESIT.value, deger="1000")
+        k2_a1 = Aksiyon(kural_id=kural2.id, aksiyon_tipi=AksiyonTipi.SABIT_INDIRIM.value, aksiyon_degeri=150.0)
+        db.add_all([k2_c1, k2_c2, k2_a1])
+
+        # Kural 3: Gece Alışverişine Ücretsiz Kargo
         kural3 = Kural(
             kampanya_id=kampanya2.id,
-            ad="Hafta Sonu Kredi Kartı Ücretsiz Kargo",
+            ad="Gece Alışverişine Ücretsiz Kargo",
             oncelik_sirasi=3,
-            durum=KuralDurumu.AKTIF,
+            durum=KuralDurumu.AKTIF.value
         )
         db.add(kural3)
         db.flush()
-        db.add_all([
-            Kosul(kural_id=kural3.id, parametre=Parametre.HAFTANIN_GUNU, operator=Operator.ICINDEDIR, deger="CUMARTESI,PAZAR"),
-            Kosul(kural_id=kural3.id, parametre=Parametre.ODEME_YONTEMI, operator=Operator.ESITTIR, deger="KREDI_KARTI"),
-        ])
-        db.add(Aksiyon(kural_id=kural3.id, aksiyon_tipi=AksiyonTipi.UCRETSIZ_KARGO, aksiyon_degeri=Decimal("0")))
 
-        # Kural 4 – Öncelik 4: 200 TL üzeri, öğleden sonra → Hediye ürün
+        k3_c1 = Kosul(kural_id=kural3.id, parametre=ParametreAdi.ISLEM_SAATI.value, operator=OperatorTipi.BUYUK_ESIT.value, deger="22:00")
+        k3_a1 = Aksiyon(kural_id=kural3.id, aksiyon_tipi=AksiyonTipi.UCRETSIZ_KARGO.value)
+        db.add_all([k3_c1, k3_a1])
+
+        # Kural 4: 750 TL Üzeri Kredi Kartı Alışverişine Hediye Termos
         kural4 = Kural(
-            kampanya_id=kampanya2.id,
-            ad="Öğleden Sonra Alışveriş Hediyesi",
+            kampanya_id=kampanya1.id,
+            ad="750 TL Üzeri Kredi Kartına Hediye Termos",
             oncelik_sirasi=4,
-            durum=KuralDurumu.AKTIF,
+            durum=KuralDurumu.AKTIF.value
         )
         db.add(kural4)
         db.flush()
-        db.add_all([
-            Kosul(kural_id=kural4.id, parametre=Parametre.SEPET_TUTARI, operator=Operator.BUYUK_ESIT, deger="200"),
-            Kosul(kural_id=kural4.id, parametre=Parametre.ISLEM_SAATI, operator=Operator.BUYUK_ESIT, deger="12:00"),
-            Kosul(kural_id=kural4.id, parametre=Parametre.ISLEM_SAATI, operator=Operator.KUCUK_ESIT, deger="18:00"),
-        ])
-        db.add(Aksiyon(
-            kural_id=kural4.id,
-            aksiyon_tipi=AksiyonTipi.HEDIYE_URUN_EKLE,
-            aksiyon_degeri=Decimal("0"),
-            hediye_urun_id=hediye2.id,
-        ))
+
+        k4_c1 = Kosul(kural_id=kural4.id, parametre=ParametreAdi.SEPET_TUTARI.value, operator=OperatorTipi.BUYUK_ESIT.value, deger="750")
+        k4_c2 = Kosul(kural_id=kural4.id, parametre=ParametreAdi.ODEME_YONTEMI.value, operator=OperatorTipi.ESITTIR.value, deger="KREDI_KARTI")
+        k4_a1 = Aksiyon(kural_id=kural4.id, aksiyon_tipi=AksiyonTipi.HEDIYE_URUN_EKLE.value, hediye_urun_id=hediye1.id)
+        db.add_all([k4_c1, k4_c2, k4_a1])
+
+        # Kural 5: Yeni Üyelere Hoş Geldin Kuponu (Pasif)
+        kural5 = Kural(
+            kampanya_id=kampanya1.id,
+            ad="Yeni Üyelere Hoş Geldin Kuponu",
+            oncelik_sirasi=5,
+            durum=KuralDurumu.PASIF.value
+        )
+        db.add(kural5)
+        db.flush()
+
+        k5_c1 = Kosul(kural_id=kural5.id, parametre=ParametreAdi.KULLANICI_TIPI.value, operator=OperatorTipi.ESITTIR.value, deger="YENI")
+        k5_c2 = Kosul(kural_id=kural5.id, parametre=ParametreAdi.SEPET_TUTARI.value, operator=OperatorTipi.BUYUK_ESIT.value, deger="300")
+        k5_a1 = Aksiyon(kural_id=kural5.id, aksiyon_tipi=AksiyonTipi.KUPON_TANIMLA.value, kupon_sablon_id=kupon2.id)
+        db.add_all([k5_c1, k5_c2, k5_a1])
 
         db.commit()
-        logger.info("✅ Seed verisi başarıyla yüklendi.")
+        print("Seed verileri başarıyla yüklendi!")
 
-    except Exception as e:
+    except Exception as exc:
         db.rollback()
-        logger.exception("❌ Seed hatası: %s", e)
-        raise
+        print(f"Seed işlemi sırasında hata oluştu: {exc}")
+        raise exc
     finally:
         db.close()
 
 
 if __name__ == "__main__":
-    seed()
+    seed_database()

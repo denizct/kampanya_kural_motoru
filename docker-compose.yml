@@ -1,55 +1,38 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:16-alpine
     container_name: kampanya_db
-    restart: unless-stopped
+    restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-kampanya_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kampanya_pass}
-      POSTGRES_DB: ${POSTGRES_DB:-kampanya_db}
+      POSTGRES_USER: kampanya_user
+      POSTGRES_PASSWORD: kampanya_pass
+      POSTGRES_DB: kampanya_db
     ports:
       - "5432:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
-    networks:
-      - kampanya_net
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kampanya_user} -d ${POSTGRES_DB:-kampanya_db}"]
+      test: ["CMD-SHELL", "pg_isready -U kampanya_user -d kampanya_db"]
       interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 10s
+      retries: 5
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: kampanya_web
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-kampanya_user}:${POSTGRES_PASSWORD:-kampanya_pass}@db:5432/${POSTGRES_DB:-kampanya_db}
-      APP_ENV: ${APP_ENV:-development}
-      DEBUG: ${DEBUG:-true}
+    build: .
+    container_name: kampanya_app
+    restart: always
     ports:
       - "8000:8000"
-    volumes:
-      - ./app:/app/app
-    networks:
-      - kampanya_net
+    environment:
+      DATABASE_URL: postgresql://kampanya_user:kampanya_pass@db:5432/kampanya_db
+      PORT: 8000
     depends_on:
       db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-
-networks:
-  kampanya_net:
-    driver: bridge
+    volumes:
+      - ./app:/app/app
 
 volumes:
-  pg_data:
-    driver: local
+  postgres_data:

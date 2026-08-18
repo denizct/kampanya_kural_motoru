@@ -1,167 +1,263 @@
 """
-schemas.py – Pydantic v2 request/response models.
+schemas.py – Pydantic v2 validation models and DTO schemas.
 """
-from __future__ import annotations
-
+import re
 from datetime import datetime
-from decimal import Decimal
-from typing import Annotated, Any
+from typing import Optional, List, Any, Dict
+from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
+from app.models import (
+    KuralDurumu, ParametreAdi, OperatorTipi, AksiyonTipi,
+    KullaniciTipi, OdemeYontemi, HaftaninGunu
+)
 
-from pydantic import BaseModel, Field, field_validator, model_validator
-
-from app.models import AksiyonTipi, KuralDurumu, Operator, Parametre
-
-
-# ── Shared helpers ────────────────────────────────────────────────────────────
-
-class OrmBase(BaseModel):
-    model_config = {"from_attributes": True}
+TIME_REGEX = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
 
 
-# ── Referans modelleri ────────────────────────────────────────────────────────
+# -------------------------------------------------------------
+# Sepet Değerlendirme (Evaluation) Şemaları
+# -------------------------------------------------------------
+class SepetDegerlendirRequest(BaseModel):
+    sepet_tutari: float = Field(..., ge=0, description="Sepet toplam tutarı (>= 0)")
+    kullanici_tipi: KullaniciTipi = Field(..., description="Kullanıcı segmenti (VIP, STANDART, YENI)")
+    islem_saati: str = Field(..., description="İşlem saati (HH:mm formatında)")
+    haftanin_gunu: HaftaninGunu = Field(..., description="Haftanın günü (PAZARTESI...PAZAR)")
+    odeme_yontemi: OdemeYontemi = Field(..., description="Ödeme yöntemi")
 
-class HediyeUrunRead(OrmBase):
+    @field_validator("islem_saati")
+    @classmethod
+    def validate_islem_saati(cls, v: str) -> str:
+        v = v.strip()
+        if not TIME_REGEX.match(v):
+            raise ValueError("islem_saati 'HH:mm' formatında olmalıdır (örn: 14:30)")
+        return v
+
+
+class EkFayda(BaseModel):
+    tip: str
+    detay: Optional[Dict[str, Any]] = None
+    aciklama: Optional[str] = None
+
+
+class SepetDegerlendirResponse(BaseModel):
+    uygulanan_kural_id: Optional[int] = None
+    kampanya_adi: Optional[str] = None
+    aksiyon_tipi: Optional[str] = None
+    orijinal_tutar: float
+    indirim_tutari: float = 0.0
+    odenecek_tutar: float
+    ek_fayda: Optional[Dict[str, Any]] = None
+    fallback_applied: bool = False
+    mesaj: Optional[str] = None
+
+
+class ErrorResponse(BaseModel):
+    error_code: str
+    message: str
+    details: Optional[Any] = None
+
+
+# -------------------------------------------------------------
+# Koşul Şemaları
+# -------------------------------------------------------------
+class KosulBase(BaseModel):
+    parametre: ParametreAdi
+    operator: OperatorTipi
+    deger: str
+
+    @model_validator(mode="after")
+    def validate_parametre_operator_compatibility(self):
+        param = self.parametre
+        op = self.operator
+        val = self.deger.strip()
+
+        if param == ParametreAdi.SEPET_TUTARI:
+            if op not in [OperatorTipi.BUYUK_ESIT, OperatorTipi.KUCUK_ESIT,
+                          OperatorTipi.BUYUKTUR, OperatorTipi.KUCUKTUR, OperatorTipi.ESITTIR]:
+                raise ValueError(f"sepet_tutari parametresi için '{op.value}' operatörü geçersizdir.")
+            try:
+                num = float(val)
+                if num < 0:
+                    raise ValueError("sepet_tutari koşul değeri negatif olamaz.")
+            except ValueError:
+                raise ValueError("sepet_tutari için geçerli bir sayısal değer girilmelidir.")
+
+        elif param == ParametreAdi.KULLANICI_TIPI:
+            if op != OperatorTipi.ESITTIR:
+                raise ValueError("kullanici_tipi için yalnızca '==' operatörü desteklenir.")
+            valid_vals = [e.value for e in KullaniciTipi]
+            if val not in valid_vals:
+                raise ValueError(f"kullanici_tipi değeri {valid_vals} listesinden seçilmelidir.")
+
+        elif param == ParametreAdi.ODEME_YONTEMI:
+            if op != OperatorTipi.ESITTIR:
+                raise ValueError("odeme_yontemi için yalnızca '==' operatörü desteklenir.")
+            valid_vals = [e.value for e in OdemeYontemi]
+            if val not in valid_vals:
+                raise ValueError(f"odeme_yontemi değeri {valid_vals} listesinden seçilmelidir.")
+
+        elif param == ParametreAdi.HAFTANIN_GUNU:
+            if op not in [OperatorTipi.ESITTIR, OperatorTipi.ICINDEDIR]:
+                raise ValueError("haftanin_gunu için yalnızca '==' veya 'ICINDEDIR' operatörü desteklenir.")
+            valid_days = [e.value for e in HaftaninGunu]
+            if op == OperatorTipi.ESITTIR:
+                if val not in valid_days:
+                    raise ValueError(f"haftanin_gunu değeri geçerli bir gün olmalıdır ({valid_days}).")
+            elif op == OperatorTipi.ICINDEDIR:
+                days = [d.strip() for d in val.split(",") if d.strip()]
+                if not days:
+                    raise ValueError("ICINDEDIR operatörü için en az bir gün belirtilmelidir.")
+                for d in days:
+                    if d not in valid_days:
+                        raise ValueError(f"Geçersiz gün: '{d}'. Geçerli günler: {valid_days}")
+
+        elif param == ParametreAdi.ISLEM_SAATI:
+            if op not in [OperatorTipi.BUYUK_ESIT, OperatorTipi.KUCUK_ESIT, OperatorTipi.ESITTIR]:
+                raise ValueError("islem_saati için yalnızca '>=', '<=' veya '==' operatörü desteklenir.")
+            if not TIME_REGEX.match(val):
+                raise ValueError("islem_saati 'HH:mm' formatında olmalıdır (örn: 09:00).")
+
+        return self
+
+
+class KosulCreate(KosulBase):
+    pass
+
+
+class KosulResponse(KosulBase):
+    id: int
+    kural_id: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+# -------------------------------------------------------------
+# Aksiyon Şemaları
+# -------------------------------------------------------------
+class AksiyonBase(BaseModel):
+    aksiyon_tipi: AksiyonTipi
+    aksiyon_degeri: Optional[float] = Field(None, ge=0)
+    hediye_urun_id: Optional[int] = None
+    kupon_sablon_id: Optional[int] = None
+
+    @model_validator(mode="after")
+    def validate_action_fields(self):
+        tip = self.aksiyon_tipi
+        val = self.aksiyon_degeri
+
+        if tip == AksiyonTipi.YUZDE_INDIRIM:
+            if val is None or val <= 0 or val > 100:
+                raise ValueError("YUZDE_INDIRIM için 1 ile 100 arasında bir yüzde değeri girilmelidir.")
+        elif tip == AksiyonTipi.SABIT_INDIRIM:
+            if val is None or val <= 0:
+                raise ValueError("SABIT_INDIRIM için 0'dan büyük bir indirim tutarı girilmelidir.")
+        elif tip == AksiyonTipi.HEDIYE_URUN_EKLE:
+            if not self.hediye_urun_id:
+                raise ValueError("HEDIYE_URUN_EKLE aksiyonu için geçerli bir hediye_urun_id seçilmelidir.")
+        elif tip == AksiyonTipi.KUPON_TANIMLA:
+            if not self.kupon_sablon_id:
+                raise ValueError("KUPON_TANIMLA aksiyonu için geçerli bir kupon_sablon_id seçilmelidir.")
+        return self
+
+
+class AksiyonCreate(AksiyonBase):
+    pass
+
+
+class AksiyonResponse(AksiyonBase):
+    id: int
+    kural_id: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+# -------------------------------------------------------------
+# Referans Şemaları (Hediye & Kupon)
+# -------------------------------------------------------------
+class HediyeUrunResponse(BaseModel):
     id: int
     stok_kodu: str
     urun_adi: str
     stok_adedi: int
     durum: str
+    model_config = ConfigDict(from_attributes=True)
 
 
-class KuponSablonuRead(OrmBase):
+class KuponSablonResponse(BaseModel):
     id: int
     kupon_kodu: str
-    indirim_tutari: Decimal
+    indirim_tutari: float
     kullanim_limiti: int
     durum: str
+    model_config = ConfigDict(from_attributes=True)
 
 
-# ── Koşul şemaları ────────────────────────────────────────────────────────────
-
-class KosulCreate(BaseModel):
-    parametre: Parametre
-    operator: Operator
-    deger: str = Field(..., min_length=1, max_length=255)
-
-
-class KosulRead(OrmBase):
-    id: int
-    parametre: Parametre
-    operator: Operator
-    deger: str
-
-
-# ── Aksiyon şemaları ──────────────────────────────────────────────────────────
-
-class AksiyonCreate(BaseModel):
-    aksiyon_tipi: AksiyonTipi
-    aksiyon_degeri: Decimal = Field(default=Decimal("0"), ge=0)
-    hediye_urun_id: int | None = None
-    kupon_sablon_id: int | None = None
-
-    @model_validator(mode="after")
-    def validate_aksiyon(self) -> "AksiyonCreate":
-        if self.aksiyon_tipi == AksiyonTipi.HEDIYE_URUN_EKLE and not self.hediye_urun_id:
-            raise ValueError("HEDIYE_URUN_EKLE aksiyonu için hediye_urun_id zorunludur.")
-        if self.aksiyon_tipi == AksiyonTipi.KUPON_TANIMLA and not self.kupon_sablon_id:
-            raise ValueError("KUPON_TANIMLA aksiyonu için kupon_sablon_id zorunludur.")
-        return self
-
-
-class AksiyonRead(OrmBase):
-    id: int
-    aksiyon_tipi: AksiyonTipi
-    aksiyon_degeri: Decimal
-    hediye_urun_id: int | None
-    kupon_sablon_id: int | None
-    hediye_urun: HediyeUrunRead | None = None
-    kupon_sablonu: KuponSablonuRead | None = None
-
-
-# ── Kural şemaları ────────────────────────────────────────────────────────────
-
+# -------------------------------------------------------------
+# Kural Şemaları
+# -------------------------------------------------------------
 class KuralCreate(BaseModel):
-    kampanya_id: int | None = None
-    ad: str = Field(..., min_length=1, max_length=255)
-    oncelik_sirasi: int = Field(..., ge=1)
-    durum: KuralDurumu = KuralDurumu.AKTIF
-    kosullar: list[KosulCreate] = Field(..., min_length=1)
-    aksiyon: AksiyonCreate
+    ad: str = Field(..., min_length=1, max_length=255, description="Kural Adı")
+    kampanya_id: Optional[int] = None
+    oncelik_sirasi: Optional[int] = Field(None, ge=1, description="Öncelik sırası (Boş bırakılırsa en sona eklenir)")
+    durum: KuralDurumu = Field(default=KuralDurumu.PASIF, description="Varsayılan: PASIF")
+    kosullar: List[KosulCreate] = Field(..., min_length=1, description="En az bir koşul gereklidir")
+    aksiyon: AksiyonCreate = Field(..., description="Uygulanacak aksiyon")
 
 
-class KuralRead(OrmBase):
+class KuralUpdate(BaseModel):
+    ad: Optional[str] = Field(None, min_length=1, max_length=255)
+    kampanya_id: Optional[int] = None
+    oncelik_sirasi: Optional[int] = Field(None, ge=1)
+    durum: Optional[KuralDurumu] = None
+    kosullar: Optional[List[KosulCreate]] = None
+    aksiyon: Optional[AksiyonCreate] = None
+
+
+class KuralStatusUpdate(BaseModel):
+    durum: KuralDurumu
+
+
+class KuralPriorityUpdate(BaseModel):
+    yeni_oncelik: int = Field(..., ge=1)
+
+
+class KampanyaMiniResponse(BaseModel):
     id: int
-    kampanya_id: int | None
     ad: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+class KuralResponse(BaseModel):
+    id: int
+    ad: str
+    kampanya_id: Optional[int] = None
+    kampanya: Optional[KampanyaMiniResponse] = None
     oncelik_sirasi: int
     durum: KuralDurumu
     olusturulma_tarihi: datetime
-    kosullar: list[KosulRead]
-    aksiyon: AksiyonRead | None
+    kosullar: List[KosulResponse] = []
+    aksiyon: Optional[AksiyonResponse] = None
+    model_config = ConfigDict(from_attributes=True)
 
 
-class DurumGuncelle(BaseModel):
-    durum: KuralDurumu
+# -------------------------------------------------------------
+# Kampanya Şemaları
+# -------------------------------------------------------------
+class KampanyaCreate(BaseModel):
+    ad: str = Field(..., min_length=1, max_length=255)
+    aciklama: Optional[str] = None
+    baslangic_tarihi: datetime
+    bitis_tarihi: datetime
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.bitis_tarihi <= self.baslangic_tarihi:
+            raise ValueError("bitis_tarihi baslangic_tarihi'nden sonra olmalıdır.")
+        return self
 
 
-class OncelikSiralaItem(BaseModel):
+class KampanyaResponse(BaseModel):
     id: int
-    oncelik_sirasi: int = Field(..., ge=1)
-
-
-class OncelikSiralaRequest(BaseModel):
-    kurallar: list[OncelikSiralaItem] = Field(..., min_length=1)
-
-
-# ── Değerlendirme şemaları ────────────────────────────────────────────────────
-
-GECERLI_KULLANICI_TIPLERI = {"STANDART", "VIP", "PREMIUM", "YENI"}
-GECERLI_ODEME_YONTEMLERI = {"KREDI_KARTI", "NAKIT", "HAVALE", "KRIPTO", "BANKA_KARTI"}
-GECERLI_HAFTANIN_GUNLERI = {"PAZARTESI", "SALI", "CARSAMBA", "PERSEMBE", "CUMA", "CUMARTESI", "PAZAR"}
-
-
-class DegerlendirilecekSepet(BaseModel):
-    sepet_tutari: Decimal = Field(..., gt=0, description="Sepet tutarı 0'dan büyük olmalıdır.")
-    kullanici_tipi: str | None = None
-    islem_saati: str | None = Field(None, pattern=r"^\d{2}:\d{2}$")
-    haftanin_gunu: str | None = None
-    odeme_yontemi: str | None = None
-
-    @field_validator("kullanici_tipi")
-    @classmethod
-    def validate_kullanici(cls, v: str | None) -> str | None:
-        if v and v.upper() not in GECERLI_KULLANICI_TIPLERI:
-            raise ValueError(f"Geçersiz kullanıcı tipi. Kabul edilenler: {GECERLI_KULLANICI_TIPLERI}")
-        return v.upper() if v else v
-
-    @field_validator("haftanin_gunu")
-    @classmethod
-    def validate_gun(cls, v: str | None) -> str | None:
-        if v and v.upper() not in GECERLI_HAFTANIN_GUNLERI:
-            raise ValueError(f"Geçersiz haftanin_gunu. Kabul edilenler: {GECERLI_HAFTANIN_GUNLERI}")
-        return v.upper() if v else v
-
-    @field_validator("odeme_yontemi")
-    @classmethod
-    def validate_odeme(cls, v: str | None) -> str | None:
-        if v and v.upper() not in GECERLI_ODEME_YONTEMLERI:
-            raise ValueError(f"Geçersiz ödeme yöntemi. Kabul edilenler: {GECERLI_ODEME_YONTEMLERI}")
-        return v.upper() if v else v
-
-
-class EkFayda(BaseModel):
-    tip: str
-    detay: str
-
-
-class DegerlendirmeResponse(BaseModel):
-    durum: str  # "ESLESTI" | "ESLESMEDI" | "FALLBACK"
-    uygulanan_kural_id: int | None = None
-    kampanya_adi: str | None = None
-    aksiyon_tipi: str | None = None
-    orijinal_tutar: Decimal
-    indirim_tutari: Decimal
-    odenecek_tutar: Decimal
-    ek_fayda: EkFayda | None = None
-    fallback_applied: bool = False
-    mesaj: str = ""
+    ad: str
+    aciklama: Optional[str] = None
+    baslangic_tarihi: datetime
+    bitis_tarihi: datetime
+    olusturulma_tarihi: datetime
+    model_config = ConfigDict(from_attributes=True)

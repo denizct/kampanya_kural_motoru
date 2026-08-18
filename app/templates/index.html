@@ -1,1058 +1,530 @@
 <!DOCTYPE html>
-<html lang="tr" class="h-full bg-gray-950">
+<html lang="tr" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kampanya Kural Motoru – Admin Panel</title>
-  <meta name="description" content="Kampanya ve promosyon kural değerlendirme motoru yönetim paneli. Kuralları yönetin, test edin, simüle edin." />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    html { font-family: 'Inter', sans-serif; }
-
-    /* Subtle scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-
-    /* Toast */
-    .toast {
-      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
-      display: flex; align-items: center; gap: 0.75rem;
-      padding: 0.875rem 1.25rem; border-radius: 0.5rem;
-      font-size: 0.875rem; font-weight: 500;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-      transform: translateY(0); opacity: 1;
-      transition: all 0.3s ease;
-      max-width: 380px;
-    }
-    .toast.hide { transform: translateY(1rem); opacity: 0; }
-    .toast-success { background: #064e3b; border: 1px solid #065f46; color: #a7f3d0; }
-    .toast-error   { background: #450a0a; border: 1px solid #7f1d1d; color: #fca5a5; }
-    .toast-info    { background: #0c1a2e; border: 1px solid #1e3a5f; color: #93c5fd; }
-
-    /* Toggle switch */
-    .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider {
-      position: absolute; cursor: pointer; inset: 0;
-      background: #374151; border-radius: 22px;
-      transition: 0.3s;
-    }
-    .toggle-slider:before {
-      position: absolute; content: ""; height: 16px; width: 16px;
-      left: 3px; bottom: 3px; background: #9ca3af;
-      border-radius: 50%; transition: 0.3s;
-    }
-    input:checked + .toggle-slider { background: #1d4ed8; }
-    input:checked + .toggle-slider:before { transform: translateX(18px); background: #fff; }
-
-    /* Animate row */
-    @keyframes rowIn {
-      from { opacity:0; transform: translateY(6px); }
-      to   { opacity:1; transform: translateY(0); }
-    }
-    .row-anim { animation: rowIn 0.25s ease forwards; }
-
-    /* Badge pill */
-    .badge {
-      display: inline-flex; align-items: center; gap: 0.25rem;
-      padding: 0.2rem 0.6rem; border-radius: 9999px;
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .badge-green  { background: #022c22; color: #34d399; border: 1px solid #065f46; }
-    .badge-gray   { background: #1f2937; color: #6b7280; border: 1px solid #374151; }
-    .badge-blue   { background: #0c1a2e; color: #60a5fa; border: 1px solid #1e3a5f; }
-    .badge-amber  { background: #231200; color: #fbbf24; border: 1px solid #451a03; }
-
-    /* Card */
-    .card {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 0.75rem;
-    }
-
-    /* Form input */
-    .form-input {
-      width: 100%; background: #0f172a; border: 1px solid #1e293b;
-      color: #e2e8f0; border-radius: 0.375rem;
-      padding: 0.5rem 0.75rem; font-size: 0.875rem;
-      transition: border-color 0.15s;
-      appearance: none;
-    }
-    .form-input:focus { outline: none; border-color: #3b82f6; }
-    .form-input::placeholder { color: #475569; }
-    select.form-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1rem; padding-right: 2rem; }
-
-    /* Button */
-    .btn { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 500; border-radius: 0.375rem; padding: 0.5rem 1rem; font-size: 0.875rem; transition: all 0.15s; cursor: pointer; border: none; }
-    .btn-primary { background: #1d4ed8; color: #fff; }
-    .btn-primary:hover { background: #1e40af; }
-    .btn-danger  { background: #7f1d1d; color: #fca5a5; }
-    .btn-danger:hover { background: #991b1b; }
-    .btn-ghost { background: transparent; color: #9ca3af; border: 1px solid #374151; }
-    .btn-ghost:hover { background: #1f2937; color: #e5e7eb; }
-    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
-
-    /* Simulator card result */
-    .result-card {
-      border-radius: 0.75rem; padding: 1.5rem;
-      background: linear-gradient(135deg, #0f172a 0%, #111827 100%);
-      border: 1px solid #1e293b;
-    }
-    .result-card.matched { border-color: #065f46; }
-    .result-card.no-match { border-color: #374151; }
-    .result-card.fallback { border-color: #451a03; }
-
-    /* Divider */
-    .divider { border-top: 1px solid #1f2937; margin: 1rem 0; }
-
-    /* Loader */
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.2);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Priority badge number */
-    .priority-num {
-      width: 28px; height: 28px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; font-weight: 700;
-      background: #1e293b; color: #94a3b8; border: 1px solid #334155;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kampanya Kural Motoru | Campaign Rule Engine</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#111827',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
 </head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-slate-700 selection:text-white">
 
-<body class="h-full text-gray-200 antialiased">
-
-<!-- ── Top Nav ───────────────────────────────────────────────────────────── -->
-<header class="sticky top-0 z-50 bg-gray-950 border-b border-gray-800">
-  <div class="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-7 h-7 rounded-md bg-blue-700 flex items-center justify-center">
-        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
-        </svg>
-      </div>
-      <span class="font-semibold text-gray-100 tracking-tight text-sm">Kural Motoru</span>
-      <span class="text-gray-600 text-xs px-2 py-0.5 bg-gray-900 border border-gray-800 rounded">Admin Panel</span>
-    </div>
-    <div class="flex items-center gap-3">
-      <a href="/api/docs" target="_blank" class="text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1">
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-        API Dokümantasyon
-      </a>
-      <div id="db-status" class="flex items-center gap-1.5 text-xs text-gray-500">
-        <div class="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
-        Bağlanıyor...
-      </div>
-    </div>
-  </div>
-</header>
-
-<div class="max-w-screen-xl mx-auto px-6 py-8 space-y-8">
-
-  <!-- ── BÖLÜM 1: Kural Ekleme Formu ──────────────────────────────────── -->
-  <section id="kural-form-section">
-    <div class="flex items-center justify-between mb-4">
-      <div>
-        <h1 class="text-lg font-semibold text-gray-100">Yeni Kural Ekle</h1>
-        <p class="text-xs text-gray-500 mt-0.5">Kampanya kuralı, koşulları ve aksiyonu tanımlayın.</p>
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="toggleFormSection()">
-        <svg id="form-toggle-icon" class="w-4 h-4 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
-        <span id="form-toggle-label">Gizle</span>
-      </button>
-    </div>
-
-    <div id="form-container" class="card p-6">
-      <form id="kural-form" onsubmit="handleKuralEkle(event)">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-          <div class="md:col-span-2">
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Kural Adı <span class="text-red-500">*</span></label>
-            <input id="f-ad" type="text" placeholder="örn. VIP Büyük Sepet İndirimi" class="form-input" required />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-400 mb-1.5">Öncelik Sırası <span class="text-red-500">*</span></label>
-            <select id="f-oncelik" class="form-input" required>
-              <option value="">— Seçiniz —</option>
-              <option value="1">1 (En yüksek öncelik)</option>
-            </select>
-            <p class="text-xs text-gray-600 mt-1">Seçilen konumdaki ve sonrasındaki kurallar otomatik kaydırılır.</p>
-          </div>
-        </div>
-
-        <!-- Koşullar -->
-        <div class="mb-5">
-          <div class="flex items-center justify-between mb-2">
-            <label class="block text-xs font-medium text-gray-400">Koşullar <span class="text-red-500">*</span> <span class="text-gray-600">(AND mantığıyla değerlenir)</span></label>
-            <button type="button" onclick="kosulEkle()" class="btn btn-ghost btn-sm">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-              Koşul Ekle
-            </button>
-          </div>
-          <div id="kosullar-container" class="space-y-2"></div>
-        </div>
-
-        <!-- Aksiyon -->
-        <div class="mb-6">
-          <label class="block text-xs font-medium text-gray-400 mb-2">Aksiyon <span class="text-red-500">*</span></label>
-          <div class="card p-4 bg-gray-900/50">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Aksiyon Tipi</label>
-                <select id="f-aksiyon-tipi" class="form-input" onchange="aksiyonTipiDegisti()">
-                  <option value="YUZDE_INDIRIM">Yüzde İndirim</option>
-                  <option value="SABIT_INDIRIM">Sabit İndirim (TL)</option>
-                  <option value="UCRETSIZ_KARGO">Ücretsiz Kargo</option>
-                  <option value="HEDIYE_URUN_EKLE">Hediye Ürün Ekle</option>
-                  <option value="KUPON_TANIMLA">Kupon Tanımla</option>
-                </select>
-              </div>
-              <div id="aksiyon-deger-wrap">
-                <label class="block text-xs text-gray-500 mb-1" id="aksiyon-deger-label">Değer (%)</label>
-                <input id="f-aksiyon-deger" type="number" min="0" step="0.01" placeholder="10" class="form-input" />
-              </div>
-              <div id="aksiyon-extra-wrap" class="hidden">
-                <label class="block text-xs text-gray-500 mb-1" id="aksiyon-extra-label">Seçim</label>
-                <select id="f-aksiyon-extra" class="form-input">
-                  <option value="">Yükleniyor...</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex gap-3">
-          <button type="submit" id="submit-btn" class="btn btn-primary">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-            Kuralı Kaydet
-          </button>
-          <button type="button" onclick="formSifirla()" class="btn btn-ghost">Temizle</button>
-        </div>
-      </form>
-    </div>
-  </section>
-
-  <!-- ── BÖLÜM 2: Kurallar Tablosu ────────────────────────────────────── -->
-  <section id="kurallar-section">
-    <div class="flex items-center justify-between mb-4">
-      <div>
-        <h2 class="text-lg font-semibold text-gray-100">Kural Listesi</h2>
-        <p class="text-xs text-gray-500 mt-0.5">Aktif kurallar öncelik sırasıyla (First-Hit) değerlenir.</p>
-      </div>
-      <button onclick="kurallariYukle()" class="btn btn-ghost btn-sm">
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        Yenile
-      </button>
-    </div>
-
-    <div class="card overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-800">
-              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 w-12">#</th>
-              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Kural Adı</th>
-              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Koşullar</th>
-              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Aksiyon</th>
-              <th class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Durum</th>
-              <th class="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">İşlemler</th>
-            </tr>
-          </thead>
-          <tbody id="kurallar-tbody">
-            <tr>
-              <td colspan="6" class="text-center py-12 text-gray-600 text-sm">
-                <div class="flex flex-col items-center gap-2">
-                  <div class="spinner"></div>
-                  <span>Yükleniyor...</span>
+    <!-- Top Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-sm shadow-inner">
+                    ⚡
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
+                <div>
+                    <h1 class="text-base font-semibold text-slate-100 tracking-tight leading-tight">Kampanya Kural Motoru</h1>
+                    <p class="text-xs text-slate-400">E-Ticaret İndirim & Kural Değerlendirme Servisi</p>
+                </div>
+            </div>
 
-  <!-- ── BÖLÜM 3: Canlı Simülatör ─────────────────────────────────────── -->
-  <section id="simulator-section">
-    <div class="mb-4">
-      <h2 class="text-lg font-semibold text-gray-100">Canlı Simülatör</h2>
-      <p class="text-xs text-gray-500 mt-0.5">Sepet parametrelerini girin ve motor sonucunu anlık görün.</p>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Sol: Form -->
-      <div class="card p-6">
-        <h3 class="text-sm font-semibold text-gray-300 mb-4">Sepet Parametreleri</h3>
-        <div class="space-y-4">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Sepet Tutarı (TL) <span class="text-red-500">*</span></label>
-              <input id="sim-tutar" type="number" min="0.01" step="0.01" placeholder="750.00" class="form-input" />
+            <!-- Global Status & Info -->
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2 bg-slate-800/80 border border-slate-700/80 px-3 py-1.5 rounded-md text-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-slate-300 font-medium">Hit Policy: First</span>
+                </div>
+                <div class="flex items-center space-x-2 bg-slate-800/80 border border-slate-700/80 px-3 py-1.5 rounded-md text-xs text-slate-300">
+                    <span class="text-slate-400">Veritabanı:</span>
+                    <span class="font-mono text-emerald-400">PostgreSQL / Online</span>
+                </div>
+                <a href="/docs" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium rounded-md transition-colors">
+                    Swagger API
+                </a>
             </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Kullanıcı Tipi</label>
-              <select id="sim-kullanici" class="form-input">
-                <option value="">— Seçiniz —</option>
-                <option value="STANDART">Standart</option>
-                <option value="VIP">VIP</option>
-                <option value="PREMIUM">Premium</option>
-                <option value="YENI">Yeni</option>
-              </select>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">İşlem Saati</label>
-              <input id="sim-saat" type="time" class="form-input" placeholder="14:30" />
-            </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Haftanın Günü</label>
-              <select id="sim-gun" class="form-input">
-                <option value="">— Seçiniz —</option>
-                <option value="PAZARTESI">Pazartesi</option>
-                <option value="SALI">Salı</option>
-                <option value="CARSAMBA">Çarşamba</option>
-                <option value="PERSEMBE">Perşembe</option>
-                <option value="CUMA">Cuma</option>
-                <option value="CUMARTESI">Cumartesi</option>
-                <option value="PAZAR">Pazar</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">Ödeme Yöntemi</label>
-            <select id="sim-odeme" class="form-input">
-              <option value="">— Seçiniz —</option>
-              <option value="KREDI_KARTI">Kredi Kartı</option>
-              <option value="BANKA_KARTI">Banka Kartı</option>
-              <option value="NAKIT">Nakit</option>
-              <option value="HAVALE">Havale</option>
-              <option value="KRIPTO">Kripto</option>
-            </select>
-          </div>
-          <button id="sim-btn" onclick="simulatorCalistir()" class="btn btn-primary w-full justify-center">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            Kampanyayı Test Et
-          </button>
-
-          <!-- Hızlı Preset Butonlar -->
-          <div>
-            <p class="text-xs text-gray-600 mb-2">Hızlı Test Senaryoları:</p>
-            <div class="flex flex-wrap gap-2">
-              <button onclick="presetYukle('vip_buyuk')" class="btn btn-ghost btn-sm">VIP 1500 TL</button>
-              <button onclick="presetYukle('vip_orta')" class="btn btn-ghost btn-sm">VIP 750 TL</button>
-              <button onclick="presetYukle('hafta_sonu')" class="btn btn-ghost btn-sm">Hafta Sonu</button>
-              <button onclick="presetYukle('ogleden_sonra')" class="btn btn-ghost btn-sm">Öğleden Sonra</button>
-            </div>
-          </div>
         </div>
-      </div>
+    </header>
 
-      <!-- Sağ: Sonuç Kartı -->
-      <div>
-        <div id="sim-result" class="result-card h-full min-h-[300px] flex items-center justify-center">
-          <div class="text-center text-gray-600">
-            <svg class="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
-            </svg>
-            <p class="text-sm">Simülasyon sonucu burada görünecek</p>
-            <p class="text-xs mt-1">Parametreleri doldurun ve "Test Et" butonuna basın</p>
-          </div>
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Metrics Overview Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Aktif Kurallar</span>
+                    <h3 id="stat-active-rules" class="text-2xl font-bold text-slate-100 mt-1 font-mono">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-emerald-950/50 border border-emerald-800/60 flex items-center justify-center text-emerald-400 text-lg">
+                    ✓
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Toplam Kural</span>
+                    <h3 id="stat-total-rules" class="text-2xl font-bold text-slate-100 mt-1 font-mono">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-lg">
+                    📋
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Stoklu Hediyeler</span>
+                    <h3 id="stat-active-gifts" class="text-2xl font-bold text-slate-100 mt-1 font-mono">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-lg">
+                    🎁
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Geçerli Kuponlar</span>
+                    <h3 id="stat-active-coupons" class="text-2xl font-bold text-slate-100 mt-1 font-mono">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-lg">
+                    🎟️
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-</div>
-
-<!-- Toast Container -->
-<div id="toast-container"></div>
-
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
-<script>
-// ── State ──────────────────────────────────────────────────────────────────
-let kurallar = [];
-let hediyeUrunler = [];
-let kuponSablonlari = [];
-let kosulSayac = 0;
-
-const OPERATOR_LABELS = {
-  ESITTIR: '=', BUYUKTUR: '>', KUCUKTUR: '<',
-  BUYUK_ESIT: '≥', KUCUK_ESIT: '≤', ICINDEDIR: '∈ (virgülle ayrılmış)'
-};
-
-const PARAMETRE_LABELS = {
-  sepet_tutari: 'Sepet Tutarı', kullanici_tipi: 'Kullanıcı Tipi',
-  islem_saati: 'İşlem Saati', haftanin_gunu: 'Haftanın Günü', odeme_yontemi: 'Ödeme Yöntemi'
-};
-
-const AKSIYON_LABELS = {
-  YUZDE_INDIRIM: '% İndirim', SABIT_INDIRIM: 'Sabit TL', UCRETSIZ_KARGO: 'Ücretsiz Kargo',
-  HEDIYE_URUN_EKLE: 'Hediye Ürün', KUPON_TANIMLA: 'Kupon Tanımla'
-};
-
-// ── Init ──────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-  await Promise.all([kurallariYukle(), referanslariYukle(), saglikKontrol()]);
-  kosulEkle();
-});
-
-async function saglikKontrol() {
-  try {
-    const r = await fetch('/health');
-    const data = await r.json();
-    const el = document.getElementById('db-status');
-    if (data.status === 'ok') {
-      el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-green-500"></div><span class="text-green-500">Bağlı</span>';
-    } else {
-      el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-red-500"></div><span class="text-red-400">Hata</span>';
-    }
-  } catch {}
-}
-
-// ── Referans Veriler ──────────────────────────────────────────────────────
-async function referanslariYukle() {
-  try {
-    const [hu, ks] = await Promise.all([
-      fetch('/api/v1/referans/hediye-urunler').then(r=>r.json()),
-      fetch('/api/v1/referans/kupon-sablonlari').then(r=>r.json()),
-    ]);
-    hediyeUrunler = hu;
-    kuponSablonlari = ks;
-  } catch(e) {
-    console.error('Referanslar yüklenemedi', e);
-  }
-}
-
-// ── Kurallar Listesi ──────────────────────────────────────────────────────
-async function kurallariYukle() {
-  try {
-    const r = await fetch('/api/v1/kurallar');
-    if (!r.ok) throw new Error();
-    kurallar = await r.json();
-    renderKurallar();
-    oncelikDropdownGuncelle(); // Öncelik dropdown'u N+1 ile güncelle
-  } catch {
-    document.getElementById('kurallar-tbody').innerHTML = `
-      <tr><td colspan="6" class="text-center py-8 text-red-400 text-sm">Kurallar yüklenemedi.</td></tr>`;
-  }
-}
-
-/**
- * Öncelik sırası dropdown'unu dinamik olarak doldurur.
- * N kural varsa 1 .. N+1 arasında seçenek sunar; böylece
- * rasgele bir değer yazılmasının önüne geçilir.
- */
-function oncelikDropdownGuncelle() {
-  const sel = document.getElementById('f-oncelik');
-  if (!sel) return;
-  const mevcut = sel.value; // Seçili değeri koru
-  const n = kurallar.length;
-  const options = ['<option value="">— Seçiniz —</option>'];
-  for (let i = 1; i <= n + 1; i++) {
-    const etiket = i === 1 ? `${i} (En yüksek öncelik)` : i === n + 1 ? `${i} (En sona ekle)` : String(i);
-    options.push(`<option value="${i}"${mevcut == i ? ' selected' : ''}>${etiket}</option>`);
-  }
-  sel.innerHTML = options.join('');
-}
-
-function renderKurallar() {
-  const tbody = document.getElementById('kurallar-tbody');
-  if (!kurallar.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-12 text-gray-600 text-sm">
-      Henüz kural eklenmemiş. Yukarıdan yeni kural oluşturun.
-    </td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = kurallar.map((k, idx) => {
-    const aktif = k.durum === 'AKTIF';
-    const kosulOzet = k.kosullar.map(ko =>
-      `<span class="inline-block bg-gray-800 text-gray-300 text-xs px-1.5 py-0.5 rounded mr-1 mb-1">
-        ${PARAMETRE_LABELS[ko.parametre] || ko.parametre} ${OPERATOR_LABELS[ko.operator] || ko.operator} <strong>${ko.deger}</strong>
-      </span>`
-    ).join('');
-
-    const aksiyonBadge = k.aksiyon ? (() => {
-      const t = k.aksiyon.aksiyon_tipi;
-      let extra = '';
-      if (['YUZDE_INDIRIM','SABIT_INDIRIM'].includes(t)) extra = ` ${k.aksiyon.aksiyon_degeri}${t==='YUZDE_INDIRIM'?'%':' TL'}`;
-      if (t === 'HEDIYE_URUN_EKLE' && k.aksiyon.hediye_urun) extra = ` – ${k.aksiyon.hediye_urun.urun_adi}`;
-      if (t === 'KUPON_TANIMLA' && k.aksiyon.kupon_sablonu) extra = ` – ${k.aksiyon.kupon_sablonu.kupon_kodu}`;
-      return `<span class="badge badge-blue">${AKSIYON_LABELS[t] || t}${extra}</span>`;
-    })() : '<span class="text-gray-600 text-xs">—</span>';
-
-    return `<tr class="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors row-anim" data-id="${k.id}">
-      <td class="px-4 py-3">
-        <div class="flex items-center gap-1.5">
-          <div class="priority-num">${k.oncelik_sirasi}</div>
-          <div class="flex flex-col gap-0.5">
-            <button onclick="oncelikTasi(${k.id}, 'yukari')" class="text-gray-600 hover:text-gray-300 transition-colors" title="Yukarı taşı">
-              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+        <!-- Navigation Tabs -->
+        <div class="border-b border-slate-800 flex space-x-6 text-sm font-medium">
+            <button id="tab-btn-rules" onclick="switchTab('rules')" class="pb-3 border-b-2 border-slate-100 text-slate-100 flex items-center space-x-2 transition-all">
+                <span>Kampanya Kuralları & Öncelik Sıralaması</span>
+                <span id="tab-badge-rules" class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-xs font-mono">0</span>
             </button>
-            <button onclick="oncelikTasi(${k.id}, 'asagi')" class="text-gray-600 hover:text-gray-300 transition-colors" title="Aşağı taşı">
-              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            <button id="tab-btn-simulator" onclick="switchTab('simulator')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition-all">
+                <span>⚡ Canlı Sepet Simülatörü</span>
+                <span class="bg-emerald-950/60 border border-emerald-800 text-emerald-400 px-2 py-0.5 rounded-full text-xs font-mono">Live API</span>
             </button>
-          </div>
+            <button id="tab-btn-references" onclick="switchTab('references')" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2 transition-all">
+                <span>Hediye & Kupon Envanteri</span>
+            </button>
         </div>
-      </td>
-      <td class="px-4 py-3">
-        <p class="font-medium text-gray-200 text-sm">${escHtml(k.ad)}</p>
-        ${k.kampanya_id ? `<p class="text-xs text-gray-600 mt-0.5">Kampanya #${k.kampanya_id}</p>` : ''}
-      </td>
-      <td class="px-4 py-3 max-w-xs">${kosulOzet || '<span class="text-gray-600 text-xs">—</span>'}</td>
-      <td class="px-4 py-3">${aksiyonBadge}</td>
-      <td class="px-4 py-3">
-        <label class="toggle-switch" title="${aktif ? 'Pasif yap' : 'Aktif yap'}">
-          <input type="checkbox" ${aktif ? 'checked' : ''} onchange="durumToggle(${k.id}, this.checked)" />
-          <span class="toggle-slider"></span>
-        </label>
-      </td>
-      <td class="px-4 py-3 text-right">
-        <button onclick="kuralSil(${k.id}, '${escHtml(k.ad)}')" class="btn btn-ghost btn-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 border-red-900/30">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-          Sil
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
-}
 
-// ── Koşul Yönetimi ────────────────────────────────────────────────────────
+        <!-- TAB 1: RULES MANAGEMENT -->
+        <section id="view-rules" class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-100">Kural Öncelik Sıralaması</h2>
+                    <p class="text-xs text-slate-400">Kurallar yukarıdan aşağıya (Öncelik 1'den başlayarak) değerlendirilir. İlk uyan kural işletilir.</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="refreshData()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium rounded-md transition-colors flex items-center space-x-1.5">
+                        <span>↻ Yenile</span>
+                    </button>
+                    <button onclick="openCreateRuleModal()" class="px-4 py-2 bg-slate-100 hover:bg-white text-slate-900 font-semibold text-xs rounded-md shadow transition-colors flex items-center space-x-1.5">
+                        <span>+ Yeni Kural Tanımla</span>
+                    </button>
+                </div>
+            </div>
 
-// Parametre bazlı konfigürasyon tablosu
-const PARAM_CONFIG = {
-  sepet_tutari: {
-    operatorler: [
-      { v: 'BUYUK_ESIT', l: '≥ (Büyük Eşit)' },
-      { v: 'KUCUK_ESIT', l: '≤ (Küçük Eşit)' },
-      { v: 'BUYUKTUR',   l: '> (Büyüktür)'   },
-      { v: 'KUCUKTUR',   l: '< (Küçüktür)'   },
-      { v: 'ESITTIR',    l: '= (Eşittir)'     },
-    ],
-    degerTipi: 'number',
-    placeholder: 'ör. 500.00',
-  },
-  kullanici_tipi: {
-    operatorler: [{ v: 'ESITTIR', l: '= (Eşittir)' }],
-    degerTipi: 'select',
-    secenekler: [
-      { v: 'STANDART', l: 'Standart' },
-      { v: 'VIP',      l: 'VIP'      },
-      { v: 'PREMIUM',  l: 'Premium'  },
-      { v: 'YENI',     l: 'Yeni'     },
-    ],
-  },
-  islem_saati: {
-    operatorler: [
-      { v: 'BUYUK_ESIT', l: '≥ (Büyük Eşit)' },
-      { v: 'KUCUK_ESIT', l: '≤ (Küçük Eşit)' },
-      { v: 'BUYUKTUR',   l: '> (Büyüktür)'   },
-      { v: 'KUCUKTUR',   l: '< (Küçüktür)'   },
-      { v: 'ESITTIR',    l: '= (Eşittir)'     },
-    ],
-    degerTipi: 'time',
-    placeholder: 'ör. 14:30',
-  },
-  haftanin_gunu: {
-    operatorler: [
-      { v: 'ESITTIR',  l: '= (Eşittir)'       },
-      { v: 'ICINDEDIR', l: '∈ (İçindedir, IN)' },
-    ],
-    degerTipi: 'select',
-    secenekler: [
-      { v: 'PAZARTESI', l: 'Pazartesi' }, { v: 'SALI',      l: 'Salı'      },
-      { v: 'CARSAMBA',  l: 'Çarşamba'  }, { v: 'PERSEMBE',  l: 'Perşembe'  },
-      { v: 'CUMA',      l: 'Cuma'      }, { v: 'CUMARTESI', l: 'Cumartesi' },
-      { v: 'PAZAR',     l: 'Pazar'     },
-    ],
-    // IN operatörü seçilince serbest metin satırına geçilecek
-  },
-  odeme_yontemi: {
-    operatorler: [
-      { v: 'ESITTIR',   l: '= (Eşittir)'       },
-      { v: 'ICINDEDIR', l: '∈ (İçindedir, IN)'  },
-    ],
-    degerTipi: 'select',
-    secenekler: [
-      { v: 'KREDI_KARTI',   l: 'Kredi Kartı'   },
-      { v: 'HAVALE',        l: 'Havale'         },
-      { v: 'KAPIDA_ODEME',  l: 'Kapıda Ödeme'  },
-      { v: 'CUZDAN',        l: 'Cüzdan'         },
-    ],
-  },
-};
+            <!-- Rules Table / Card List -->
+            <div class="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-850 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
+                            <tr>
+                                <th class="py-3.5 px-4 w-20 text-center">Öncelik</th>
+                                <th class="py-3.5 px-4">Kural Adı / Kampanya</th>
+                                <th class="py-3.5 px-4">Koşullar (Tümü Sağlanmalı)</th>
+                                <th class="py-3.5 px-4">Aksiyon / Fayda</th>
+                                <th class="py-3.5 px-4 text-center w-28">Durum</th>
+                                <th class="py-3.5 px-4 text-right w-36">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rules-table-body" class="divide-y divide-slate-800/80 text-slate-300">
+                            <!-- Populated dynamically by app.js -->
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-slate-500">Kurallar yükleniyor...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-function kosulEkle() {
-  const id = ++kosulSayac;
-  const div = document.createElement('div');
-  div.id = `kosul-${id}`;
-  div.className = 'grid gap-2 p-3 bg-gray-900/60 border border-gray-800 rounded-md row-anim';
-  div.style.gridTemplateColumns = '1fr 1fr 1fr auto';
-  div.innerHTML = `
-    <div>
-      <label class="block text-xs text-gray-600 mb-1">Parametre</label>
-      <select class="form-input" id="k-param-${id}" onchange="kosulParamDegisti(${id})">
-        <option value="sepet_tutari">Sepet Tutarı</option>
-        <option value="kullanici_tipi">Kullanıcı Tipi</option>
-        <option value="islem_saati">İşlem Saati</option>
-        <option value="haftanin_gunu">Haftanın Günü</option>
-        <option value="odeme_yontemi">Ödeme Yöntemi</option>
-      </select>
-    </div>
-    <div>
-      <label class="block text-xs text-gray-600 mb-1">Operatör</label>
-      <select class="form-input" id="k-op-${id}" onchange="kosulOpDegisti(${id})"></select>
-    </div>
-    <div>
-      <label class="block text-xs text-gray-600 mb-1">Değer</label>
-      <div id="k-deger-wrap-${id}"></div>
-    </div>
-    <div class="flex items-end pb-0.5">
-      <button type="button" onclick="kosulSil(${id})" class="btn btn-ghost btn-sm text-red-400 hover:bg-red-900/20 px-2" title="Koşulu sil">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>`;
-  document.getElementById('kosullar-container').appendChild(div);
-  kosulParamDegisti(id); // İlk render
-}
+        <!-- TAB 2: CART SIMULATOR -->
+        <section id="view-simulator" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Left Column: Input Form -->
+                <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-5">
+                    <div class="border-b border-slate-800 pb-3">
+                        <h2 class="text-sm font-semibold text-slate-100">Sepet Bağlam Parametreleri</h2>
+                        <p class="text-xs text-slate-400">POST /api/v1/kampanya/degerlendir endpoint'ine gönderilecek yük.</p>
+                    </div>
 
-function kosulParamDegisti(id) {
-  const param = document.getElementById(`k-param-${id}`).value;
-  const cfg = PARAM_CONFIG[param];
-  if (!cfg) return;
+                    <!-- Preset Quick Buttons -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-2">Örnek Senaryo Yükle:</label>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <button onclick="loadScenario('weekend_discount')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 rounded text-left truncate">
+                                🛍️ Hafta Sonu (600 TL)
+                            </button>
+                            <button onclick="loadScenario('vip_order')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 rounded text-left truncate">
+                                👑 VIP Sipariş (1200 TL)
+                            </button>
+                            <button onclick="loadScenario('night_order')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 rounded text-left truncate">
+                                🌙 Gece 23:30 (Kargo Bedava)
+                            </button>
+                            <button onclick="loadScenario('gift_cart')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 rounded text-left truncate">
+                                🎁 Kredi Kartı 800 TL (Termos)
+                            </button>
+                        </div>
+                    </div>
 
-  // Operatör dropdown güncelle
-  const opSel = document.getElementById(`k-op-${id}`);
-  opSel.innerHTML = cfg.operatorler.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
+                    <!-- Input Fields -->
+                    <form id="simulator-form" onsubmit="event.preventDefault(); runSimulation();" class="space-y-4 text-xs">
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Sepet Tutarı (TL) <span class="text-red-400">*</span></label>
+                            <div class="relative">
+                                <input type="number" step="0.01" min="0" id="sim_sepet_tutari" required value="600.00" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-slate-500">
+                                <span class="absolute right-3 top-2 text-slate-500 font-mono">₺</span>
+                            </div>
+                        </div>
 
-  // Değer alanı render
-  kosulDegerRender(id, param, cfg.operatorler[0].v);
-}
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-medium text-slate-300 mb-1">Kullanıcı Segmenti <span class="text-red-400">*</span></label>
+                                <select id="sim_kullanici_tipi" required class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                    <option value="STANDART">STANDART</option>
+                                    <option value="VIP">VIP</option>
+                                    <option value="YENI">YENI</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-medium text-slate-300 mb-1">Ödeme Yöntemi <span class="text-red-400">*</span></label>
+                                <select id="sim_odeme_yontemi" required class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                    <option value="KREDI_KARTI">KREDI_KARTI</option>
+                                    <option value="HAVALE">HAVALE</option>
+                                    <option value="KAPIDA_ODEME">KAPIDA_ODEME</option>
+                                </select>
+                            </div>
+                        </div>
 
-function kosulOpDegisti(id) {
-  const param = document.getElementById(`k-param-${id}`).value;
-  const op    = document.getElementById(`k-op-${id}`).value;
-  kosulDegerRender(id, param, op);
-}
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-medium text-slate-300 mb-1">Haftanın Günü <span class="text-red-400">*</span></label>
+                                <select id="sim_haftanin_gunu" required class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                    <option value="PAZARTESI">PAZARTESI</option>
+                                    <option value="SALI">SALI</option>
+                                    <option value="CARSAMBA">CARSAMBA</option>
+                                    <option value="PERSEMBE">PERSEMBE</option>
+                                    <option value="CUMA">CUMA</option>
+                                    <option value="CUMARTESI">CUMARTESI</option>
+                                    <option value="PAZAR" selected>PAZAR</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-medium text-slate-300 mb-1">İşlem Saati <span class="text-red-400">*</span></label>
+                                <input type="time" id="sim_islem_saati" required value="14:30" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                            </div>
+                        </div>
 
-function kosulDegerRender(id, param, op) {
-  const cfg = PARAM_CONFIG[param];
-  const wrap = document.getElementById(`k-deger-wrap-${id}`);
-  if (!cfg || !wrap) return;
+                        <button type="submit" class="w-full py-2.5 bg-slate-100 hover:bg-white text-slate-900 font-semibold rounded shadow transition-colors flex items-center justify-center space-x-2">
+                            <span>⚡ Sepeti Değerlendir (Evaluate)</span>
+                        </button>
+                    </form>
+                </div>
 
-  const icindedir = (op === 'ICINDEDIR');
+                <!-- Right Column: Result Presentation & JSON Output -->
+                <div class="lg:col-span-7 space-y-4">
+                    
+                    <!-- Result Summary Card -->
+                    <div id="sim-result-card" class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div class="flex items-center space-x-2">
+                                <span id="sim-status-badge" class="px-2.5 py-0.5 rounded text-xs font-mono font-medium bg-slate-800 text-slate-300">
+                                    Durum: Bekleniyor
+                                </span>
+                                <span id="sim-hit-badge" class="hidden px-2.5 py-0.5 rounded text-xs font-mono font-medium bg-emerald-950 border border-emerald-800 text-emerald-400">
+                                    Kural Eşleşti
+                                </span>
+                            </div>
+                            <span id="sim-exec-time" class="text-xs font-mono text-slate-400">0 ms</span>
+                        </div>
 
-  if (cfg.degerTipi === 'number') {
-    // Sayısal: number input
-    wrap.innerHTML = `<input class="form-input" type="number" id="k-deger-${id}" min="0" step="0.01" placeholder="${cfg.placeholder || ''}" />`;
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div class="bg-slate-950/60 border border-slate-800/80 p-3 rounded-lg">
+                                <span class="text-xs text-slate-400 block mb-1">Orijinal Sepet</span>
+                                <span id="res-orig-price" class="text-lg font-bold font-mono text-slate-200">₺0.00</span>
+                            </div>
+                            <div class="bg-slate-950/60 border border-slate-800/80 p-3 rounded-lg">
+                                <span class="text-xs text-slate-400 block mb-1">İndirim Tutarı</span>
+                                <span id="res-discount" class="text-lg font-bold font-mono text-emerald-400">₺0.00</span>
+                            </div>
+                            <div class="bg-slate-950/60 border border-slate-800/80 p-3 rounded-lg">
+                                <span class="text-xs text-slate-400 block mb-1">Ödenecek Net Tutar</span>
+                                <span id="res-final-price" class="text-lg font-bold font-mono text-slate-100">₺0.00</span>
+                            </div>
+                        </div>
 
-  } else if (cfg.degerTipi === 'time') {
-    // Saat: time input
-    wrap.innerHTML = `<input class="form-input" type="time" id="k-deger-${id}" />`;
+                        <!-- Rule & Benefit Highlights -->
+                        <div id="sim-benefit-box" class="hidden bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-1.5 text-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-400">Uygulanan Kural:</span>
+                                <span id="res-rule-name" class="font-semibold text-slate-200">-</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-400">Aksiyon Tipi:</span>
+                                <span id="res-action-type" class="font-mono text-slate-300">-</span>
+                            </div>
+                            <div id="res-extra-benefit-row" class="hidden flex items-center justify-between text-emerald-400 border-t border-slate-800/80 pt-1.5">
+                                <span class="font-medium">Ek Fayda:</span>
+                                <span id="res-extra-benefit-val" class="font-semibold">-</span>
+                            </div>
+                        </div>
 
-  } else if (cfg.degerTipi === 'select' && icindedir && cfg.secenekler) {
-    // ── ICINDEDIR + seçenekli parametre → CHECKBOX GRUBU ──
-    // Serbest metin YOKTUR; sadece listeden seçim yapılabilir.
-    const checkboxes = cfg.secenekler.map(o =>
-      `<label class="inline-flex items-center gap-1 cursor-pointer select-none
-              px-2 py-1 rounded border border-gray-700 bg-gray-800
-              hover:border-blue-500 hover:bg-gray-700 transition-colors
-              has-[:checked]:border-blue-500 has-[:checked]:bg-blue-900/40 has-[:checked]:text-blue-300
-              text-xs text-gray-300 whitespace-nowrap">
-        <input type="checkbox" value="${o.v}"
-               class="hidden k-cb-${id}"
-               onchange="kosulCheckboxDegisti(${id})" />
-        ${o.l}
-      </label>`
-    ).join('');
+                        <!-- Message alert -->
+                        <div id="sim-message-box" class="text-xs text-slate-400 bg-slate-950/40 p-2.5 rounded border border-slate-800">
+                            Değerlendirme sonucunu görmek için 'Sepeti Değerlendir' butonuna basın.
+                        </div>
+                    </div>
 
-    wrap.innerHTML =
-      `<div class="flex flex-wrap gap-1.5 mt-0.5" id="k-cb-group-${id}">${checkboxes}</div>
-       <input type="hidden" id="k-deger-${id}" value="" />
-       <p class="text-xs text-gray-600 mt-1">En az bir gün seçin.</p>`;
+                    <!-- Raw JSON Viewer -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-mono text-slate-400 uppercase">REST API JSON Yanıtı</span>
+                            <button onclick="copyJsonResponse()" class="text-xs text-slate-400 hover:text-slate-200 transition-colors">
+                                📋 Kopyala
+                            </button>
+                        </div>
+                        <pre id="json-viewer" class="code-font text-xs text-slate-300 bg-slate-950 border border-slate-800/80 p-3 rounded-lg overflow-x-auto max-h-48">{ "status": "idle" }</pre>
+                    </div>
+                </div>
 
-  } else if (cfg.degerTipi === 'select') {
-    // Eşitir: tek seçim dropdown
-    const opts = cfg.secenekler.map(o => `<option value="${o.v}">${o.l}</option>`).join('');
-    wrap.innerHTML = `<select class="form-input" id="k-deger-${id}">${opts}</select>`;
+            </div>
+        </section>
 
-  } else {
-    // Fallback: serbest metin
-    wrap.innerHTML = `<input class="form-input" type="text" id="k-deger-${id}" placeholder="" />`;
-  }
-}
+        <!-- TAB 3: REFERENCES & STOCK -->
+        <section id="view-references" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Gift Products Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-100">Hediye Ürün Envanteri</h3>
+                            <p class="text-xs text-slate-400">Kampanya aksiyonlarında seçilebilen aktif/stoklu ürünler.</p>
+                        </div>
+                        <span class="text-lg">🎁</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="pb-2">Stok Kodu</th>
+                                    <th class="pb-2">Ürün Adı</th>
+                                    <th class="pb-2 text-center">Stok</th>
+                                    <th class="pb-2 text-right">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gifts-table-body" class="divide-y divide-slate-800 text-slate-300">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-/**
- * Checkbox grubundaki seçili değerleri virgülle birleştirip
- * gizli input'a yazar (backend'e bu değer gider).
- */
-function kosulCheckboxDegisti(id) {
-  const checked = Array.from(
-    document.querySelectorAll(`.k-cb-${id}:checked`)
-  ).map(cb => cb.value);
-  const hidden = document.getElementById(`k-deger-${id}`);
-  if (hidden) hidden.value = checked.join(',');
-}
+                <!-- Coupon Templates Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-100">Kupon Şablonları</h3>
+                            <p class="text-xs text-slate-400">Kampanya aksiyonlarında tanımlanabilen indirim kuponları.</p>
+                        </div>
+                        <span class="text-lg">🎟️</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="pb-2">Kupon Kodu</th>
+                                    <th class="pb-2">İndirim</th>
+                                    <th class="pb-2 text-center">Kalan Limit</th>
+                                    <th class="pb-2 text-right">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="coupons-table-body" class="divide-y divide-slate-800 text-slate-300">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-/**
- * Bir koşul satırından değeri güvenle okur.
- * Normal input/select: .value
- * Checkbox grubu: gizli k-deger-{id} input'undaki birleştirilmiş değer.
- */
-function kosulDegerOku(id) {
-  const el = document.getElementById(`k-deger-${id}`);
-  return el ? el.value.trim() : '';
-}
+    </main>
 
-function kosulSil(id) {
-  const el = document.getElementById(`kosul-${id}`);
-  if (el && document.getElementById('kosullar-container').children.length > 1) el.remove();
-  else showToast('En az bir koşul gereklidir.', 'error');
-}
+    <!-- CREATE / EDIT RULE MODAL -->
+    <div id="rule-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-850">
+                <div>
+                    <h3 id="modal-title" class="text-sm font-semibold text-slate-100">Yeni Kampanya Kuralı Tanımla</h3>
+                    <p class="text-xs text-slate-400">Kural varsayılan olarak Pasif durumda kaydedilir.</p>
+                </div>
+                <button onclick="closeRuleModal()" class="text-slate-400 hover:text-slate-100 text-lg">&times;</button>
+            </div>
 
-// ── Aksiyon Tipi Değişimi ─────────────────────────────────────────────────
-function aksiyonTipiDegisti() {
-  const tipi = document.getElementById('f-aksiyon-tipi').value;
-  const dWrap = document.getElementById('aksiyon-deger-wrap');
-  const eWrap = document.getElementById('aksiyon-extra-wrap');
-  const dLabel = document.getElementById('aksiyon-deger-label');
-  const eLabel = document.getElementById('aksiyon-extra-label');
-  const eSelect = document.getElementById('f-aksiyon-extra');
+            <!-- Modal Form Body -->
+            <form id="rule-form" onsubmit="event.preventDefault(); saveRule();" class="p-6 overflow-y-auto space-y-5 text-xs">
+                <input type="hidden" id="form-rule-id" value="">
 
-  dWrap.classList.remove('hidden');
-  eWrap.classList.add('hidden');
+                <!-- Rule Name & Campaign -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Kural Adı <span class="text-red-400">*</span></label>
+                        <input type="text" id="form-rule-name" required placeholder="Örn: Hafta Sonu %10 İndirim" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Kampanya Grubu (Opsiyonel)</label>
+                        <select id="form-campaign-id" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                            <option value="">-- Kampanyasız / Bağımsız --</option>
+                        </select>
+                    </div>
+                </div>
 
-  if (tipi === 'YUZDE_INDIRIM') {
-    dLabel.textContent = 'İndirim Oranı (%)';
-    document.getElementById('f-aksiyon-deger').placeholder = '10';
-  } else if (tipi === 'SABIT_INDIRIM') {
-    dLabel.textContent = 'İndirim Tutarı (TL)';
-    document.getElementById('f-aksiyon-deger').placeholder = '50';
-  } else if (tipi === 'UCRETSIZ_KARGO') {
-    dWrap.classList.add('hidden');
-  } else if (tipi === 'HEDIYE_URUN_EKLE') {
-    dWrap.classList.add('hidden');
-    eWrap.classList.remove('hidden');
-    eLabel.textContent = 'Hediye Ürün';
-    eSelect.innerHTML = hediyeUrunler.length
-      ? hediyeUrunler.map(h => `<option value="${h.id}">${h.urun_adi} (${h.stok_kodu})</option>`).join('')
-      : '<option value="">Hediye ürün bulunamadı</option>';
-  } else if (tipi === 'KUPON_TANIMLA') {
-    dWrap.classList.add('hidden');
-    eWrap.classList.remove('hidden');
-    eLabel.textContent = 'Kupon Şablonu';
-    eSelect.innerHTML = kuponSablonlari.length
-      ? kuponSablonlari.map(k => `<option value="${k.id}">${k.kupon_kodu} (${k.indirim_tutari} TL)</option>`).join('')
-      : '<option value="">Kupon şablonu bulunamadı</option>';
-  }
-}
+                <!-- Priority & Initial Status -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Öncelik Sırası (1 = En Yüksek)</label>
+                        <input type="number" id="form-priority" min="1" placeholder="Otomatik en sona ekle" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-slate-500">
+                        <p class="text-[11px] text-slate-500 mt-0.5">Araya eklenirse diğer kurallar otomatik +1 kaydırılır.</p>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Başlangıç Durumu</label>
+                        <select id="form-status" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                            <option value="PASIF" selected>PASİF (Önerilen)</option>
+                            <option value="AKTIF">AKTİF</option>
+                        </select>
+                    </div>
+                </div>
 
-// ── Kural Kaydet ──────────────────────────────────────────────────────────
-async function handleKuralEkle(e) {
-  e.preventDefault();
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner"></div> Kaydediliyor...';
+                <!-- Conditions Section (Strict Constraints Form) -->
+                <div class="border border-slate-800 bg-slate-950/60 rounded-lg p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="font-semibold text-slate-200">Koşullar (Tümü Sağlanmalı - AND)</label>
+                        <button type="button" onclick="addConditionRow()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-medium border border-slate-700 transition-colors">
+                            + Koşul Ekle
+                        </button>
+                    </div>
+                    <div id="conditions-container" class="space-y-2.5">
+                        <!-- Condition Rows injected dynamically -->
+                    </div>
+                </div>
 
-  try {
-    const container = document.getElementById('kosullar-container');
-    const kosulDivs = container.querySelectorAll('[id^="kosul-"]');
-    const kosullar_payload = [];
+                <!-- Action / Benefit Section -->
+                <div class="border border-slate-800 bg-slate-950/60 rounded-lg p-4 space-y-3">
+                    <label class="font-semibold text-slate-200 block">Uygulanacak Aksiyon (Fayda)</label>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Aksiyon Türü <span class="text-red-400">*</span></label>
+                            <select id="form-action-type" onchange="handleActionTypeChange()" required class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                <option value="YUZDE_INDIRIM">YUZDE_INDIRIM (%)</option>
+                                <option value="SABIT_INDIRIM">SABIT_INDIRIM (TL)</option>
+                                <option value="UCRETSIZ_KARGO">UCRETSIZ_KARGO</option>
+                                <option value="HEDIYE_URUN_EKLE">HEDIYE_URUN_EKLE</option>
+                                <option value="KUPON_TANIMLA">KUPON_TANIMLA</option>
+                            </select>
+                        </div>
 
-    for (const div of kosulDivs) {
-      const id = div.id.split('-')[1];
-      const param = document.getElementById(`k-param-${id}`)?.value;
-      const op    = document.getElementById(`k-op-${id}`)?.value;
-      // Değer okuma: checkbox grubu için kosulDegerOku(), diğerleri için .value
-      const deger = kosulDegerOku(id);
-      if (!param || !op || !deger) { showToast('Tüm koşul alanlarını doldurun.', 'error'); return; }
-      kosullar_payload.push({ parametre: param, operator: op, deger });
-    }
+                        <!-- Dynamic Action Value or Reference Selection -->
+                        <div id="action-value-wrapper">
+                            <label id="action-value-label" class="block text-slate-400 mb-1">İndirim Yüzdesi (%)</label>
+                            <input type="number" step="0.1" id="form-action-value" placeholder="Örn: 10" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                        </div>
 
-    const tipi = document.getElementById('f-aksiyon-tipi').value;
-    const deger = parseFloat(document.getElementById('f-aksiyon-deger')?.value || '0') || 0;
-    const extra = document.getElementById('f-aksiyon-extra')?.value || null;
+                        <div id="action-gift-wrapper" class="hidden">
+                            <label class="block text-slate-400 mb-1">Hediye Ürün Seçin <span class="text-red-400">*</span></label>
+                            <select id="form-gift-id" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                <option value="">-- Stoklu Hediye Seçin --</option>
+                            </select>
+                        </div>
 
-    const aksiyon = {
-      aksiyon_tipi: tipi,
-      aksiyon_degeri: deger,
-      hediye_urun_id: tipi === 'HEDIYE_URUN_EKLE' ? parseInt(extra) : null,
-      kupon_sablon_id: tipi === 'KUPON_TANIMLA' ? parseInt(extra) : null,
-    };
+                        <div id="action-coupon-wrapper" class="hidden">
+                            <label class="block text-slate-400 mb-1">Kupon Şablonu Seçin <span class="text-red-400">*</span></label>
+                            <select id="form-coupon-id" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-100 focus:outline-none focus:border-slate-500">
+                                <option value="">-- Geçerli Kupon Seçin --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-    const payload = {
-      ad: document.getElementById('f-ad').value.trim(),
-      oncelik_sirasi: parseInt(document.getElementById('f-oncelik').value, 10),
-      kosullar: kosullar_payload,
-      aksiyon,
-    };
+                <!-- Error Display -->
+                <div id="modal-error" class="hidden p-3 rounded bg-red-950/60 border border-red-800 text-red-300 text-xs">
+                </div>
 
-    if (!payload.ad) { showToast('Kural adı zorunludur.', 'error'); return; }
-    if (!payload.oncelik_sirasi || payload.oncelik_sirasi < 1) { showToast('Geçerli bir öncelik sırası seçin.', 'error'); return; }
-
-    const r = await fetch('/api/v1/kurallar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!r.ok) {
-      const err = await r.json();
-      const msg = err.detail || 'Kural kaydedilemedi.';
-      showToast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error');
-      return;
-    }
-
-    showToast('Kural başarıyla eklendi.', 'success');
-    formSifirla();
-    await kurallariYukle();
-  } catch(err) {
-    showToast('Sunucu hatası: ' + err.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg> Kuralı Kaydet';
-  }
-}
-
-function formSifirla() {
-  document.getElementById('f-ad').value = '';
-  document.getElementById('f-aksiyon-deger').value = '';
-  document.getElementById('kosullar-container').innerHTML = '';
-  kosulEkle();
-  aksiyonTipiDegisti();
-  oncelikDropdownGuncelle(); // Seçimi sıfırla, listeyi güncelle
-  document.getElementById('f-oncelik').value = ''; // Seçimi temizle
-}
-
-// ── Durum Toggle ──────────────────────────────────────────────────────────
-async function durumToggle(id, aktif) {
-  try {
-    const r = await fetch(`/api/v1/kurallar/${id}/durum`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ durum: aktif ? 'AKTIF' : 'PASIF' }),
-    });
-    if (!r.ok) throw new Error();
-    showToast(`Kural ${aktif ? 'aktifleştirildi' : 'pasife alındı'}.`, 'info');
-    await kurallariYukle();
-  } catch {
-    showToast('Durum güncellenemedi.', 'error');
-    await kurallariYukle();
-  }
-}
-
-// ── Öncelik Taşıma ────────────────────────────────────────────────────────
-async function oncelikTasi(id, yon) {
-  const idx = kurallar.findIndex(k => k.id === id);
-  if (idx === -1) return;
-  const hedef = yon === 'yukari' ? idx - 1 : idx + 1;
-  if (hedef < 0 || hedef >= kurallar.length) return;
-
-  // Swap
-  const tmp = kurallar[idx].oncelik_sirasi;
-  kurallar[idx].oncelik_sirasi = kurallar[hedef].oncelik_sirasi;
-  kurallar[hedef].oncelik_sirasi = tmp;
-
-  try {
-    const r = await fetch('/api/v1/kurallar/oncelik-sirala', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        kurallar: kurallar.map(k => ({ id: k.id, oncelik_sirasi: k.oncelik_sirasi }))
-      }),
-    });
-    if (!r.ok) throw new Error();
-    kurallar = await r.json();
-    renderKurallar();
-  } catch {
-    showToast('Öncelik güncellenemedi.', 'error');
-    await kurallariYukle();
-  }
-}
-
-// ── Kural Sil ─────────────────────────────────────────────────────────────
-async function kuralSil(id, ad) {
-  if (!confirm(`"${ad}" kuralını silmek istediğinize emin misiniz?`)) return;
-  try {
-    const r = await fetch(`/api/v1/kurallar/${id}`, { method: 'DELETE' });
-    if (!r.ok && r.status !== 204) throw new Error();
-    showToast('Kural silindi.', 'info');
-    await kurallariYukle();
-  } catch {
-    showToast('Kural silinemedi.', 'error');
-  }
-}
-
-// ── Simülatör ─────────────────────────────────────────────────────────────
-const PRESETS = {
-  vip_buyuk:      { tutar: 1500, kullanici: 'VIP', saat: '14:30', gun: 'PAZARTESI', odeme: 'KREDI_KARTI' },
-  vip_orta:       { tutar: 750,  kullanici: 'VIP', saat: '10:00', gun: 'SALI',      odeme: 'NAKIT' },
-  hafta_sonu:     { tutar: 200,  kullanici: 'STANDART', saat: '16:00', gun: 'CUMARTESI', odeme: 'KREDI_KARTI' },
-  ogleden_sonra:  { tutar: 300,  kullanici: 'STANDART', saat: '14:00', gun: 'CARSAMBA',  odeme: 'NAKIT' },
-};
-
-function presetYukle(key) {
-  const p = PRESETS[key];
-  if (!p) return;
-  document.getElementById('sim-tutar').value = p.tutar;
-  document.getElementById('sim-kullanici').value = p.kullanici;
-  document.getElementById('sim-saat').value = p.saat;
-  document.getElementById('sim-gun').value = p.gun;
-  document.getElementById('sim-odeme').value = p.odeme;
-}
-
-async function simulatorCalistir() {
-  const tutar = parseFloat(document.getElementById('sim-tutar').value);
-  if (!tutar || tutar <= 0) { showToast('Geçerli bir sepet tutarı giriniz.', 'error'); return; }
-
-  const btn = document.getElementById('sim-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner"></div> Hesaplanıyor...';
-
-  const payload = {
-    sepet_tutari: tutar,
-    kullanici_tipi: document.getElementById('sim-kullanici').value || null,
-    islem_saati: document.getElementById('sim-saat').value || null,
-    haftanin_gunu: document.getElementById('sim-gun').value || null,
-    odeme_yontemi: document.getElementById('sim-odeme').value || null,
-  };
-
-  try {
-    const r = await fetch('/api/v1/kampanya/degerlendir', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!r.ok) {
-      const err = await r.json();
-      showToast(typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail), 'error');
-      return;
-    }
-
-    const data = await r.json();
-    renderSimResult(data);
-  } catch(e) {
-    showToast('Simülatör hatası: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Kampanyayı Test Et';
-  }
-}
-
-function renderSimResult(data) {
-  const el = document.getElementById('sim-result');
-  const matched = data.durum === 'ESLESTI';
-  const fallback = data.durum === 'FALLBACK';
-
-  el.className = `result-card ${matched ? 'matched' : fallback ? 'fallback' : 'no-match'}`;
-
-  const durumBadge = matched
-    ? '<span class="badge badge-green">✓ Kural Eşleşti</span>'
-    : fallback
-      ? '<span class="badge badge-amber">⚠ Fallback</span>'
-      : '<span class="badge badge-gray">— Eşleşme Yok</span>';
-
-  const tasarrufYuzde = data.orijinal_tutar > 0
-    ? ((data.indirim_tutari / data.orijinal_tutar) * 100).toFixed(1)
-    : '0.0';
-
-  el.innerHTML = `
-    <div class="flex items-center justify-between mb-5">
-      <div>
-        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Değerlendirme Sonucu</p>
-        <p class="text-sm font-medium text-gray-200">${escHtml(data.mesaj)}</p>
-      </div>
-      ${durumBadge}
+                <!-- Footer Buttons -->
+                <div class="flex items-center justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeRuleModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-medium transition-colors">
+                        Vazgeç
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-slate-100 hover:bg-white text-slate-900 rounded font-semibold transition-colors shadow">
+                        Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    ${matched ? `
-    <div class="grid grid-cols-2 gap-3 mb-5 text-xs">
-      <div class="bg-gray-900/70 rounded-md px-3 py-2 border border-gray-800">
-        <p class="text-gray-500 mb-0.5">Kural ID</p>
-        <p class="text-gray-200 font-semibold">#${data.uygulanan_kural_id}</p>
-      </div>
-      <div class="bg-gray-900/70 rounded-md px-3 py-2 border border-gray-800">
-        <p class="text-gray-500 mb-0.5">Aksiyon</p>
-        <p class="text-blue-400 font-semibold">${AKSIYON_LABELS[data.aksiyon_tipi] || data.aksiyon_tipi}</p>
-      </div>
-      ${data.kampanya_adi ? `<div class="col-span-2 bg-gray-900/70 rounded-md px-3 py-2 border border-gray-800">
-        <p class="text-gray-500 mb-0.5">Kampanya</p>
-        <p class="text-gray-200 font-semibold">${escHtml(data.kampanya_adi)}</p>
-      </div>` : ''}
-    </div>` : ''}
-
-    <div class="divider"></div>
-
-    <!-- Fatura Özeti -->
-    <div class="space-y-2 text-sm mb-4">
-      <div class="flex justify-between text-gray-400">
-        <span>Orijinal Tutar</span>
-        <span class="font-medium text-gray-200">${formatTL(data.orijinal_tutar)}</span>
-      </div>
-      ${data.indirim_tutari > 0 ? `
-      <div class="flex justify-between text-green-400">
-        <span>İndirim Tutarı <span class="text-xs text-green-600">(-%${tasarrufYuzde})</span></span>
-        <span class="font-semibold">− ${formatTL(data.indirim_tutari)}</span>
-      </div>` : ''}
-      <div class="divider"></div>
-      <div class="flex justify-between text-base font-bold">
-        <span class="text-gray-200">Ödenecek Tutar</span>
-        <span class="${matched && data.indirim_tutari > 0 ? 'text-green-400' : 'text-gray-100'}">${formatTL(data.odenecek_tutar)}</span>
-      </div>
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm px-4 py-3 rounded-lg border shadow-xl text-xs font-medium transition-all duration-300 transform translate-y-2">
+        <div class="flex items-center space-x-2">
+            <span id="toast-icon">ℹ️</span>
+            <span id="toast-msg">İşlem başarıyla tamamlandı.</span>
+        </div>
     </div>
 
-    ${data.ek_fayda ? `
-    <div class="mt-3 flex items-start gap-2 text-xs bg-blue-950/40 border border-blue-900/30 rounded-md px-3 py-2.5">
-      <svg class="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span class="text-blue-300">${escHtml(data.ek_fayda.detay)}</span>
-    </div>` : ''}
-
-    <p class="text-xs text-gray-700 mt-4 text-right">fallback_applied: ${data.fallback_applied}</p>
-  `;
-}
-
-// ── Form Görünürlük Toggle ────────────────────────────────────────────────
-let formVisible = true;
-function toggleFormSection() {
-  formVisible = !formVisible;
-  document.getElementById('form-container').style.display = formVisible ? '' : 'none';
-  document.getElementById('form-toggle-icon').style.transform = formVisible ? '' : 'rotate(180deg)';
-  document.getElementById('form-toggle-label').textContent = formVisible ? 'Gizle' : 'Göster';
-}
-
-// ── Utilities ─────────────────────────────────────────────────────────────
-function formatTL(val) {
-  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 2 }).format(val);
-}
-
-function escHtml(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-let toastTimer;
-function showToast(msg, type = 'info') {
-  const cont = document.getElementById('toast-container');
-  const div = document.createElement('div');
-  div.className = `toast toast-${type}`;
-  const icons = {
-    success: '✓', error: '✕', info: 'ℹ'
-  };
-  div.innerHTML = `<span class="text-base">${icons[type] || 'ℹ'}</span><span>${escHtml(msg)}</span>`;
-  cont.appendChild(div);
-  setTimeout(() => { div.classList.add('hide'); setTimeout(() => div.remove(), 300); }, 4000);
-}
-</script>
+    <script src="/static/app.js"></script>
 </body>
 </html>

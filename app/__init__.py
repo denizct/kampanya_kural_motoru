@@ -1,1 +1,3 @@
-# Kampanya Kural Motoru – Python package marker
+"""
+Kampanya Kural Motoru Application Package
+"""
