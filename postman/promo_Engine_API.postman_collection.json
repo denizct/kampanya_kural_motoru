@@ -1,0 +1,228 @@
+{
+  "info": {
+    "_postman_id": "8293e205-e2fd-41c4-b56b-be39fb8afdef",
+    "name": "1.Kampanya Değerlendir",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "25955456"
+  },
+  "item": [
+    {
+      "name": "TC-01: VIP Kampanya Değerlendir",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. HTTP 200 Başarılı Yanıt Kontrolü\r\npm.test(\"HTTP Durumu 200 OK olmalı\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// 2. Fallback Kontrolü (Motor çökmeden kuralları işleyebildi mi?)\r\npm.test(\"Sistem Fallback'e düşmeden kuralı işledi\", function () {\r\n    var res = pm.response.json();\r\n    pm.expect(res.fallback_applied).to.eql(false);\r\n});\r\n\r\n// 3. Matematiksel & Finansal Tutarlılık Kontrolü\r\n// (Hangi kural kazanmış olursa olsun tutarlar matematiksel olarak doğru mu?)\r\npm.test(\"Matematiksel Tutarlılık: Orijinal = İndirim + Ödenecek\", function () {\r\n    var res = pm.response.json();\r\n    var beklenenKalan = Math.max(0, res.orijinal_tutar - res.indirim_tutari);\r\n    \r\n    pm.expect(res.odenecek_tutar).to.eql(beklenenKalan);\r\n    pm.expect(res.odenecek_tutar).to.be.at.least(0);\r\n});\r\n\r\n// 4. Kural Eşleşme Bilgisi\r\npm.test(\"Uygulanan kural bilgisi dolu dönmeli\", function () {\r\n    var res = pm.response.json();\r\n    pm.expect(res).to.have.property('uygulanan_kural_id');\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"sepet_tutari\": 1500.0,\r\n  \"kullanici_tipi\": \"VIP\",\r\n  \"islem_saati\": \"14:30\",\r\n  \"haftanin_gunu\": \"CUMARTESI\",\r\n  \"odeme_yontemi\": \"KREDI_KARTI\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/kampanya/degerlendir",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "kampanya",
+            "degerlendir"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-02: Sıfır Tabanı Koruması",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200 OK ve Ödenecek Tutar >= 0 olmalı\", function () {\r\n    pm.response.to.have.status(200);\r\n    var res = pm.response.json();\r\n    pm.expect(res.odenecek_tutar).to.be.at.least(0);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"sepet_tutari\": 10.0,\r\n  \"kullanici_tipi\": \"STANDART\",\r\n  \"islem_saati\": \"10:00\",\r\n  \"haftanin_gunu\": \"PAZARTESI\",\r\n  \"odeme_yontemi\": \"HAVALE\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/kampanya/degerlendir",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "kampanya",
+            "degerlendir"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-03: Gecersiz Enum Kontrolu",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Sunucunun isteği kabul etmediğini doğrula (Pydantic genelde 422 döner)\r\npm.test(\"Geçersiz enum reddedilmeli (HTTP 422 veya 400)\", function () {\r\n    pm.expect(pm.response.code).to.be.oneOf([400, 422]);\r\n});\r\n\r\n// 2. Hatanın ödeme yöntemi alanından kaynaklandığını teyit et\r\npm.test(\"Hata detayı 'odeme_yontemi' alanını işaret etmeli\", function () {\r\n    var res = pm.response.json();\r\n    var responseText = JSON.stringify(res);\r\n    pm.expect(responseText).to.include(\"odeme_yontemi\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"sepet_tutari\": 500.0,\r\n  \"kullanici_tipi\": \"VIP\",\r\n  \"islem_saati\": \"14:30\",\r\n  \"haftanin_gunu\": \"CUMARTESI\",\r\n  \"odeme_yontemi\": \"KRIPTO_PARA\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/kampanya/degerlendir",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "kampanya",
+            "degerlendir"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-04: Negatif Sepet Validasyonu",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Sunucunun negatif tutarı kabul etmeyip 400 veya 422 döndüğünü doğrula\r\npm.test(\"Negatif sepet tutarı reddedilmeli (HTTP 400 veya 422)\", function () {\r\n    pm.expect(pm.response.code).to.be.oneOf([400, 422]);\r\n});\r\n\r\n// 2. Hata mesajının sepet_tutari alanını işaret ettiğini doğrula\r\npm.test(\"Hata sepet_tutari alanından kaynaklanmalı\", function () {\r\n    var res = pm.response.json();\r\n    var responseText = JSON.stringify(res);\r\n    pm.expect(responseText).to.include(\"sepet_tutari\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"sepet_tutari\": -250.0,\r\n  \"kullanici_tipi\": \"VIP\",\r\n  \"islem_saati\": \"14:30\",\r\n  \"haftanin_gunu\": \"CUMARTESI\",\r\n  \"odeme_yontemi\": \"KREDI_KARTI\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/kampanya/degerlendir",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "kampanya",
+            "degerlendir"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-05: Kural Listesi ve Siralama",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 1. Durum kodunun 200 OK olduğunu doğrula\r\npm.test(\"HTTP Durumu 200 OK olmalı\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\n// 2. Dönen verinin liste (array) olduğunu ve kuralların geldiğini teyit et\r\npm.test(\"Kural listesi dolu dönmeli\", function () {\r\n    var kurallar = pm.response.json();\r\n    pm.expect(kurallar).to.be.an(\"array\");\r\n    pm.expect(kurallar.length).to.be.above(0);\r\n});\r\n\r\n// 3. Kuralların oncelik_sirasi alanına sahip olduğunu doğrula\r\npm.test(\"Kurallar öncelik sırası barındırmalı\", function () {\r\n    var kurallar = pm.response.json();\r\n    pm.expect(kurallar[0]).to.have.property(\"oncelik_sirasi\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/kurallar",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "kurallar"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC-06: Sistem Saglik Kontrolu",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"OpenAPI Şeması ve Sunucu Aktif (HTTP 200)\", function () {\r\n    pm.response.to.have.status(200);\r\n    var res = pm.response.json();\r\n    pm.expect(res.openapi).to.include(\"3.\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/openapi.json",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "openapi.json"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
