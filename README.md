@@ -214,7 +214,7 @@ Aktif ve pasif kuralların öncelik sırasıyla listelendiği, SortableJS ile s�
 ###  Canlı Sepet Değerlendirme Simülatörü
 İş analistlerinin farklı sepet tutarları, müşteri segmentleri, gün ve saat kombinasyonlarını anlık olarak test edip DMN motorunun uyguladığı kuralı ve detay dökümünü doğrulayabildiği simülasyon konsolu.
 
-![Canlı Sepet Simülatörü](docs/screenshots/canlitest-ekran.jpg)
+![Canlı Sepet Simülatörü](docs/screenshots/canlitest-ekran.png)
 
 ---
 
