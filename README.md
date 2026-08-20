@@ -1,25 +1,17 @@
-# 🛒 E-Commerce Dynamic Campaign & Rule Engine (DMN & BPMN Based Analysis)
-
-> **Kıdemli İş ve Sistem Analisti Portfolyosu / Vaka Çalışması (Case Study)**  
-> **Metodoloji:** DMN (Decision Model and Notation), BPMN 2.0, Agile/Scrum (Gherkin BDD), İlişkisel Veri Modelleme (ERD), Finansal Risk Yönetimi.
-
----
-
-## 📑 İçindekiler
-1. [📌 İş Problemi, Kapsam ve Değer Önerisi](#1--iş-problemi-kapsam-ve-değer-önerisi)
-2. [🧠 DMN Karar Mimarisi & İş Kuralları (Decision Model and Notation)](#2--dmn-karar-mimarisi--iş-kuralları-decision-model-and-notation)
-3. [🔄 BPMN 2.0 Süreç Akışları (Business Process Modeling)](#3--bpmn-20-süreç-akışları-business-process-modeling)
-4. [🗄️ Veri Modelleme & İlişkisel Mimari (ERD)](#4-️-veri-modelleme--ilişkisel-mimari-erd)
-5. [📋 Agile / Scrum Yönetimi & Jira İzlenebilirliği](#5--agile--scrum-yönetimi--jira-izlenebilirliği)
-6. [🖥️ Canlı Simülasyon & Yönetim Paneli Arayüzü](#6-️-canlı-simülasyon--yönetim-paneli-arayüzü)
-7. [🧪 Test Doğrulama ve Kabul Kriterleri (Postman & Pytest)](#7--test-doğrulama-ve-kabul-kriterleri-postman--pytest)
-8. [⚙️ Hızlı Başlangıç (Mimari & Dağıtım Özeti)](#8-️-hızlı-başlangıç-mimari--dağıtım-özeti)
+1. [ İş Problemi, Kapsam ve Değer Önerisi](#1--iş-problemi-kapsam-ve-değer-önerisi)
+2. [ DMN Karar Mimarisi & İş Kuralları (Decision Model and Notation)](#2--dmn-karar-mimarisi--iş-kuralları-decision-model-and-notation)
+3. [ BPMN 2.0 Süreç Akışları (Business Process Modeling)](#3--bpmn-20-süreç-akışları-business-process-modeling)
+4. [ Veri Modelleme & İlişkisel Mimari (ERD)](#4-️-veri-modelleme--ilişkisel-mimari-erd)
+5. [ Agile / Scrum Yönetimi & Jira İzlenebilirliği](#5--agile--scrum-yönetimi--jira-izlenebilirliği)
+6. [ Canlı Simülasyon & Yönetim Paneli Arayüzü](#6-️-canlı-simülasyon--yönetim-paneli-arayüzü)
+7. [ Test Doğrulama ve Kabul Kriterleri (Postman & Pytest)](#7--test-doğrulama-ve-kabul-kriterleri-postman--pytest)
+8. [ Hızlı Başlangıç (Mimari & Dağıtım Özeti)](#8-️-hızlı-başlangıç-mimari--dağıtım-özeti)
 
 ---
 
-## 1. 📌 İş Problemi, Kapsam ve Değer Önerisi
+## 1.  İş Problemi, Kapsam ve Değer Önerisi
 
-### 🛑 Mevcut Durum Analizi & İş Problemi (Problem Statement)
+### Mevcut Durum Analizi & İş Problemi (Problem Statement)
 Geleneksel ve büyüyen e-ticaret platformlarında eşzamanlı olarak yüzlerce kampanya (VIP indirimleri, sepet alt limit avantajları, gece indirimleri, hafta sonu flaş teklifleri vb.) çalıştırılmaktadır. Ancak merkezi bir kural motoru bulunmadığında aşağıdaki kritik iş ve finans riskleri ortaya çıkmaktadır:
 
 * **Kural ve Kampanya Çakışmaları (Conflict Dilemma):** Sepetine birden fazla kural koşulu uyan müşteriye hangi indirimin uygulanacağının belirsiz olması; mükerrer indirim tanımlanarak işletmenin zarara uğraması.
@@ -31,7 +23,7 @@ Geleneksel ve büyüyen e-ticaret platformlarında eşzamanlı olarak yüzlerce 
 +---------------------------------------------------------------------------------------------------+
 |                                  GELENEKSEL vs. ANALİTİK ÇÖZÜM                                   |
 +------------------------------------+--------------------------------------------------------------+
-| ❌ Geleneksel Yaklaşım             | ✅ Dynamic Rule Engine (DMN & Fallback)                      |
+|  Geleneksel Yaklaşım               |  Dynamic Rule Engine (DMN & Fallback)                      |
 +------------------------------------+--------------------------------------------------------------+
 | • Hardcoded if-else blokları       | • Parametrik, DMN Hit Policy: First tabanlı dinamik motor   |
 | • Negatif bakiye açıkları          | • Matematiksel Finansal Sıfır Tabanı: max(0, Tutar - İndirim)|
@@ -41,12 +33,12 @@ Geleneksel ve büyüyen e-ticaret platformlarında eşzamanlı olarak yüzlerce 
 +------------------------------------+--------------------------------------------------------------+
 ```
 
-### 💡 Analitik Çözüm ve Sağlanan Değer (Value Proposition)
-Geliştirilen dinamik kural motoru; **DMN (Decision Model and Notation)** standartlarını referans alarak sepet bağlamını (Cart Context) milisaniyeler seviyesinde değerlendirir, matematiksel koruma kalkanıyla finansal kaçakları önler ve **Graceful Degradation (Fallback)** mekanizması sayesinde veritabanı erişilemez olsa dahi sepeti kilitlemeden orijinal tutarla ödeme akışına devam ettirir.
+### Analitik Çözüm ve Sağlanan Değer (Value Proposition)
+Geliştirilen dinamik kural motoru; **DMN (Decision Model and Notation)** standartlarını referans alarak sepet bağlamını milisaniyeler seviyesinde değerlendirir, matematiksel koruma kalkanıyla finansal kaçakları önler ve **Graceful Degradation (Fallback)** mekanizması sayesinde veritabanı erişilemez olsa dahi sepeti kilitlemeden orijinal tutarla ödeme akışına devam ettirir.
 
 ---
 
-## 2. 🧠 DMN Karar Mimarisi & İş Kuralları (Decision Model and Notation)
+## 2. DMN Karar Mimarisi & İş Kuralları (Decision Model and Notation)
 
 Sistem, iş analistleri ve operasyon ekiplerinin karar kurallarını standart bir mantıkla tanımlayabilmesi için DMN karar tablosu yaklaşımını uygular.
 
@@ -80,7 +72,7 @@ Sistem, iş analistleri ve operasyon ekiplerinin karar kurallarını standart bi
          └────────────────────────────────────────────────────────┘
 ```
 
-### 🎯 DMN Hit Policy: First (F) Mantığı
+### DMN Hit Policy: First (F) Mantığı
 Kurallar öncelik indeksine (`oncelik_sirasi: 1, 2, 3...`) göre küçükten büyüğe taranır. Koşulların tamamını (`AND` mantıksal operatörü) sağlayan **İLK kural** çalıştırılır ve motor değerlendirmeyi anında sonlandırır. Bu sayede kural çakışmaları tamamen engellenir.
 
 | Öncelik | Parametre 1 (Sepet) | Parametre 2 (Müşteri) | Parametre 3 (Zaman) | Parametre 4 (Ödeme) | Çıktı / Aksiyon (Action) |
@@ -93,7 +85,7 @@ Kurallar öncelik indeksine (`oncelik_sirasi: 1, 2, 3...`) göre küçükten bü
 
 ---
 
-### 🎁 Desteklenen Dinamik Aksiyon Tipleri ve İş Mantığı
+### Desteklenen Dinamik Aksiyon Tipleri ve İş Mantığı
 
 1. **YÜZDE İNDİRİM (`YUZDE_INDIRIM`):** Sepet tutarı üzerinden girilen yüzde kadar indirim uygular.  
    $$\text{İndirim Tutarı} = \text{Sepet Tutarı} \times \left(\frac{\text{Oran}}{100}\right)$$
@@ -104,14 +96,14 @@ Kurallar öncelik indeksine (`oncelik_sirasi: 1, 2, 3...`) göre küçükten bü
 
 ---
 
-### 🛡️ Finansal Koruma ve Sıfır Tabanı Kuralı (Zero-Floor Guarantee)
+### Finansal Koruma ve Sıfır Tabanı Kuralı (Zero-Floor Guarantee)
 İndirim tutarı ne kadar yüksek olursa olsun, ödenecek tutar hiçbir koşulda sıfırın altına inemez:
 
 $$\text{Ödenecek Tutar} = \max(0, \text{Sepet Tutarı} - \text{İndirim Tutarı})$$
 
 ---
 
-### 🔢 Çakışmasız Otomatik Öncelik Kaydırma (Priority Reordering)
+### Çakışmasız Otomatik Öncelik Kaydırma (Priority Reordering)
 Sistemde kural öncelikleri mükerrer olamaz. Yeni bir kural eklendiğinde veya mevcut kuralın sırası değiştirildiğinde, sistem ardışık pozisyonları otomatik olarak yeniden indeksler:
 
 * **Araya Kural Ekleme ($P_{yeni}$):** $P \ge P_{yeni}$ olan tüm kuralların önceliği $P + 1$ olarak güncellenir.
@@ -119,11 +111,11 @@ Sistemde kural öncelikleri mükerrer olamaz. Yeni bir kural eklendiğinde veya 
 
 ---
 
-## 3. 🔄 BPMN 2.0 Süreç Akışları (Business Process Modeling)
+## 3. BPMN 2.0 Süreç Akışları (Business Process Modeling)
 
 Süreçler **BPMN 2.0** standartlarına uygun olarak Swimlane, Havuz (Pool), Karar Kapıları (Exclusive Gateway) ve Hata Yakalama (Boundary Error Event) öğeleriyle modellenmiştir.
 
-### 🛒 Sepet Kampanya Değerlendirme Süreci
+### Sepet Kampanya Değerlendirme Süreci
 Müşterinin sepeti onaylamasından indirimlerin uygulanmasına ve hata durumundaki Graceful Fallback akışına kadar olan süreci gösterir.
 
 ![Sepet Kampanya Değerlendirme Süreci](docs/diagrams/sepet-kampanya-akisi.png)
@@ -149,20 +141,20 @@ Müşterinin sepeti onaylamasından indirimlerin uygulanmasına ve hata durumund
 
 ---
 
-### ⚙️ Yönetim & Kural Tanımlama Süreci
+### Yönetim & Kural Tanımlama Süreci
 Pazarlama analistinin yeni kural tanımlaması, stok/kupon validasyonu, öncelik çakışma kontrolü ve otomatik yeniden indeksleme adımlarını modeller.
 
 ![Yönetim & Kural Tanımlama Süreci](docs/diagrams/yonetim-admin-akisi.png)
 
 ---
 
-## 4. 🗄️ Veri Modelleme & İlişkisel Mimari (ERD)
+## 4. Veri Modelleme & İlişkisel Mimari (ERD)
 
 İş kurallarının sürdürülebilir, esnek ve ilişkisel bütünlük içinde saklanması için 3. Normal Formda (3NF) tasarlanmış 6 ana tablo bulunmaktadır:
 
 ![Veritabanı ER Diyagramı](docs/diagrams/kampanya-veritabani.png)
 
-### 📊 Tablo Sorumlulukları ve İlişki Matrisi
+### Tablo Sorumlulukları ve İlişki Matrisi
 
 | Varlık / Tablo | Açıklama | İlişkiler |
 | :--- | :--- | :--- |
@@ -175,13 +167,13 @@ Pazarlama analistinin yeni kural tanımlaması, stok/kupon validasyonu, öncelik
 
 ---
 
-## 5. 📋 Agile / Scrum Yönetimi & Jira İzlenebilirliği
+## 5. Agile / Scrum Yönetimi & Jira İzlenebilirliği
 
 Proje, kurumsal Agile/Scrum çerçevesinde **39 Story Point** iş yüküyle planlanmış; gereksinimler Epic, User Story ve Gherkin BDD formatında kabul kriterlerine dönüştürülmüştür.
 
 ![Jira Sprint Kapanış Ekranı](docs/screenshots/jira-ekran.png)
 
-### 🧩 Örnek User Story & Gherkin Kabul Kriterleri (BDD)
+### Örnek User Story & Gherkin Kabul Kriterleri (BDD)
 
 ```gherkin
 Feature: Sepet Kampanya İndirimi ve Finansal Koruma
@@ -208,55 +200,55 @@ Feature: Sepet Kampanya İndirimi ve Finansal Koruma
 
 ---
 
-## 6. 🖥️ Canlı Simülasyon & Yönetim Paneli Arayüzü
+## 6. Canlı Simülasyon & Yönetim Paneli Arayüzü
 
 Pazarlama analistlerinin IT desteğine ihtiyaç duymadan kampanyaları yönetebilmesi ve sepet kurallarını simüle edebilmesi için interaktif bir web konsolu geliştirilmiştir.
 
-### 📋 Kural Yönetimi ve Sıralama Ekranı
+### Kural Yönetimi ve Sıralama Ekranı
 Aktif ve pasif kuralların öncelik sırasıyla listelendiği, SortableJS ile sürükle-bırak yöntemiyle öncelik sıralarının dinamik olarak güncellendiği yönetim arayüzü.
 
 ![Kural Yönetim Paneli](docs/screenshots/kurallar-ekran.jpg)
 
 ---
 
-### 🛒 Canlı Sepet Değerlendirme Simülatörü
+###  Canlı Sepet Değerlendirme Simülatörü
 İş analistlerinin farklı sepet tutarları, müşteri segmentleri, gün ve saat kombinasyonlarını anlık olarak test edip DMN motorunun uyguladığı kuralı ve detay dökümünü doğrulayabildiği simülasyon konsolu.
 
 ![Canlı Sepet Simülatörü](docs/screenshots/canlitest-ekran.jpg)
 
 ---
 
-### ➕ Kural ve Koşul Tanımlama Modalı
+###  Kural ve Koşul Tanımlama Modalı
 Kullanıcı dostu form alanlarıyla parametre, operatör, değer ve aksiyon tipinin belirlendiği, stok/kupon entegrasyonu sağlayan kural oluşturma ekranı.
 
 ![Yeni Kural Oluşturma](docs/screenshots/yenikampanya-ekran.png)
 
 ---
 
-## 7. 🧪 Test Doğrulama ve Kabul Kriterleri (Postman & Pytest)
+## 7. Test Doğrulama ve Kabul Kriterleri (Postman & Pytest)
 
 Sistem kalitesi ve iş kurallarının doğruluğu, **Postman Collection Runner** ve **Pytest** otomasyon süiti ile uçtan uca test edilmiştir.
 
 ![Postman Test Runner Sonuçları](docs/screenshots/postman-test-resim.png)
 
-### 🔬 Postman Test Senaryoları Matrisi
+### Postman Test Senaryoları Matrisi
 
 | Test Case | Senaryo / Kapsam | Gönderilen Bağlam | Beklenen Davranış & Doğrulama | Sonuç |
 | :---: | :--- | :--- | :--- | :---: |
-| **TC-01** | **VIP Kampanya Değerlendirme** | 1500 TL, VIP, Cumartesi | HTTP 200, Fallback: False, Kural Eşleşti, $1500 - 150 = 1350$ TL | ✅ PASS |
-| **TC-02** | **Sıfır Tabanı Koruması** | 10 TL, Standart, Pazartesi | HTTP 200, Ödenecek Tutar $\ge 0$ TL | ✅ PASS |
-| **TC-03** | **Geçersiz Enum Kontrolü** | `odeme_yontemi: "KRIPTO"` | HTTP 400/422 Doğrulama Hatası, Alan Bazlı Hata Mesajı | ✅ PASS |
-| **TC-04** | **Negatif Sepet Validasyonu** | `sepet_tutari: -250` | HTTP 400/422 Hata, Negatif Tutarın Engellenmesi | ✅ PASS |
-| **TC-05** | **Kural Listesi ve Sıralama** | `GET /api/v1/kurallar` | HTTP 200, Dizi Boyutu $> 0$, `oncelik_sirasi` Alan Varlığı | ✅ PASS |
-| **TC-06** | **Sistem Sağlık & OpenAPI** | `GET /openapi.json` | HTTP 200, OpenAPI 3.x Şema Uyumluluğu | ✅ PASS |
+| **TC-01** | **VIP Kampanya Değerlendirme** | 1500 TL, VIP, Cumartesi | HTTP 200, Fallback: False, Kural Eşleşti, $1500 - 150 = 1350$ TL |  PASS |
+| **TC-02** | **Sıfır Tabanı Koruması** | 10 TL, Standart, Pazartesi | HTTP 200, Ödenecek Tutar $\ge 0$ TL |  PASS |
+| **TC-03** | **Geçersiz Enum Kontrolü** | `odeme_yontemi: "KRIPTO"` | HTTP 400/422 Doğrulama Hatası, Alan Bazlı Hata Mesajı |  PASS |
+| **TC-04** | **Negatif Sepet Validasyonu** | `sepet_tutari: -250` | HTTP 400/422 Hata, Negatif Tutarın Engellenmesi |  PASS |
+| **TC-05** | **Kural Listesi ve Sıralama** | `GET /api/v1/kurallar` | HTTP 200, Dizi Boyutu $> 0$, `oncelik_sirasi` Alan Varlığı |  PASS |
+| **TC-06** | **Sistem Sağlık & OpenAPI** | `GET /openapi.json` | HTTP 200, OpenAPI 3.x Şema Uyumluluğu | PASS |
 
-> ⚡ **Performans Özeti:** Postman Runner üzerinde koşan **13 test assertion'ının tamamı (13/13)** ortalama **14 ms** yanıt süresi ile başarıyla tamamlanmıştır.
+>  **Performans Özeti:** Postman Runner üzerinde koşan **13 test assertion'ının tamamı (13/13)** ortalama **14 ms** yanıt süresi ile başarıyla tamamlanmıştır.
 
 ---
 
-## 8. ⚙️ Hızlı Başlangıç (Mimari & Dağıtım Özeti)
+## 8. Hızlı Başlangıç (Mimari & Dağıtım Özeti)
 
-### 🏗️ Sistem Bileşenleri
+###  Sistem Bileşenleri
 * **REST API:** FastAPI (Python 3.13) + Pydantic v2
 * **ORM & Veritabanı:** SQLAlchemy 2.0 + PostgreSQL 16
 * **Ön Yüz:** Vanilla JavaScript + HTML5 + CSS3 + SortableJS
@@ -264,7 +256,7 @@ Sistem kalitesi ve iş kurallarının doğruluğu, **Postman Collection Runner**
 
 ---
 
-### 🚀 Çalıştırma Adımları
+###  Çalıştırma Adımları
 
 #### 1. Docker Compose ile Başlatma (Önerilen)
 ```bash
@@ -291,11 +283,11 @@ pytest
 
 ---
 
-### 🌐 Erişim Noktaları
+###  Erişim Noktaları
 
-* 🖥️ **Yönetim Paneli & Sepet Simülatörü:** [http://localhost:8000](http://localhost:8000)
-* 📖 **Swagger API Dokümantasyonu:** [http://localhost:8000/docs](http://localhost:8000/docs)
-* 📑 **ReDoc Dokümantasyonu:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
+*  **Yönetim Paneli & Sepet Simülatörü:** [http://localhost:8000](http://localhost:8000)
+*  **Swagger API Dokümantasyonu:** [http://localhost:8000/docs](http://localhost:8000/docs)
+*  **ReDoc Dokümantasyonu:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
 ---
 *Bu dokümantasyon, E-Ticaret Kampanya Kural Motoru projesinin İş ve Sistem Analizi standartlarına uygunluğunu sergilemek amacıyla hazırlanmıştır.*
